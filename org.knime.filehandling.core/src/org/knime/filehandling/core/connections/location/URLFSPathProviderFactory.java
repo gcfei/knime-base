@@ -44,31 +44,50 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 8, 2019 (Tobias Urhaug, KNIME GmbH, Berlin, Germany): created
+ *   Apr 24, 2020 (bjoern): created
  */
-package org.knime.filehandling.core.connections.local;
+package org.knime.filehandling.core.connections.location;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.core.node.util.LocalFileSystemBrowser;
+import java.net.URI;
+
+import org.knime.core.util.FileUtil;
 import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.connections.FSPath;
+import org.knime.filehandling.core.connections.url.URIFSConnection;
 
-/**
- * Creates a local file system.
- *
- * @author Bjoern Lohrmann, KNIME GmbH
- */
-public class LocalFSConnection implements FSConnection {
-
-
+class URLFSPathProviderFactory extends FSPathProviderFactory {
 
     @Override
-    public FSFileSystem<?> getFileSystem() {
-        return LocalFileSystem.INSTANCE;
+    public void close() throws Exception {
+        // do nothing, the FSConnection is created ad-hoc for each FSLocation and
+        // closed by the FSPathProvider
     }
 
+    @SuppressWarnings("resource")
     @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new LocalFileSystemBrowser();
+    public FSPathProvider create(final FSLocation fsLocation) {
+        final int timeout;
+        if (fsLocation.getFileSystemSpecifier().isPresent()) {
+            timeout = Integer.parseInt(fsLocation.getFileSystemSpecifier().get());
+        } else {
+            timeout = FileUtil.getDefaultURLTimeoutMillis();
+        }
+
+        final URI uri = URI.create(fsLocation.getPath());
+        final FSConnection fsConnection = new URIFSConnection(uri, timeout);
+
+        return new FSPathProvider() {
+
+            @Override
+            public void close() throws Exception {
+                fsConnection.close();
+            }
+
+            @Override
+            public FSPath getPath() {
+                return fsConnection.getFileSystem().getPath(fsLocation);
+            }
+        };
     }
 }

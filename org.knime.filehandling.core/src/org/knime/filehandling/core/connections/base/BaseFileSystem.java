@@ -103,7 +103,7 @@ public abstract class BaseFileSystem<T extends FSPath> extends FSFileSystem<T> {
         final long cacheTTL,
         final String workingDirectory,
         final Choice fsChoice,
-        final Optional<String> fsSpecifier) {
+        final String fsSpecifier) {
 
         super(fsChoice, fsSpecifier, workingDirectory);
 
@@ -120,6 +120,24 @@ public abstract class BaseFileSystem<T extends FSPath> extends FSFileSystem<T> {
     }
 
     /**
+     * Constructs {@FileSystem} with the given file system provider, identifying uri and name an type of the file
+     * system.
+     *
+     * @param fileSystemProvider the provider that the file system belongs to
+     * @param uri the uri identifying the file system
+     * @param cacheTTL the time to live for cached elements in milliseconds. A value of 0 or smaller indicates no
+     *            caching.
+     */
+    public BaseFileSystem(final  BaseFileSystemProvider<T, ?> fileSystemProvider,
+        final URI uri,
+        final long cacheTTL,
+        final String workingDirectory,
+        final Choice fsChoice) {
+        this(fileSystemProvider, uri, cacheTTL, workingDirectory, fsChoice, null);
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -127,14 +145,10 @@ public abstract class BaseFileSystem<T extends FSPath> extends FSFileSystem<T> {
         return m_fileSystemProvider;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void close() throws IOException {
+    public void ensureClosed() throws IOException {
         try {
             prepareClose();
-
         } finally {
 
             final ArrayList<Closeable> valuesCopy = new ArrayList<>(m_closeables.values());

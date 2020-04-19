@@ -59,7 +59,6 @@ import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.knime.filehandling.core.connections.FSFileSystem;
@@ -77,7 +76,7 @@ class LocalFileSystem extends FSFileSystem<LocalPath> {
     private static final FileSystem DEFAULT_FS = FileSystems.getDefault();
 
     private LocalFileSystem() {
-        super(Choice.LOCAL_FS, Optional.empty(), System.getProperty("user.dir"));
+        super(Choice.LOCAL_FS, System.getProperty("user.dir"));
     }
 
     @Override
@@ -88,12 +87,6 @@ class LocalFileSystem extends FSFileSystem<LocalPath> {
     @Override
     public LocalPath getPath(final String first, final String... more) {
         return new LocalPath(Paths.get(first, more));
-    }
-
-    @Override
-    public void close() throws IOException {
-        // do nothing
-
     }
 
     @Override
@@ -143,5 +136,10 @@ class LocalFileSystem extends FSFileSystem<LocalPath> {
     @Override
     public WatchService newWatchService() throws IOException {
         return DEFAULT_FS.newWatchService();
+    }
+
+    @Override
+    protected void ensureClosed() throws IOException {
+        // do nothing
     }
 }

@@ -44,31 +44,40 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 8, 2019 (Tobias Urhaug, KNIME GmbH, Berlin, Germany): created
+ *   Apr 17, 2020 (bjoern): created
  */
-package org.knime.filehandling.core.connections.local;
+package org.knime.filehandling.core.connections;
 
 import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.core.node.util.LocalFileSystemBrowser;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
 
 /**
- * Creates a local file system.
  *
  * @author Bjoern Lohrmann, KNIME GmbH
  */
-public class LocalFSConnection implements FSConnection {
+public class UncloseableFSConnection implements FSConnection {
 
+    private final FSConnection m_wrapped;
 
+    @Override
+    public void close() {
+        // do nothing
+    }
+
+    /**
+     * @param wrapped
+     */
+    public UncloseableFSConnection(final FSConnection wrapped) {
+        m_wrapped = wrapped;
+    }
 
     @Override
     public FSFileSystem<?> getFileSystem() {
-        return LocalFileSystem.INSTANCE;
+        return m_wrapped.getFileSystem();
     }
 
     @Override
     public FileSystemBrowser getFileSystemBrowser() {
-        return new LocalFileSystemBrowser();
+        return m_wrapped.getFileSystemBrowser();
     }
+
 }

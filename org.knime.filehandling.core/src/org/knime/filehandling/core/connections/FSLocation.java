@@ -63,7 +63,7 @@ import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class FSLocation {
+public final class FSLocation implements FSLocationSpec {
 
     /** The file system type. */
     private final String m_fileSystemType;
@@ -125,6 +125,7 @@ public final class FSLocation {
      *
      * @return the file system specifier
      */
+    @Override
     public Optional<String> getFileSystemSpecifier() {
         return m_fileSystemSpecifier;
     }
@@ -134,6 +135,7 @@ public final class FSLocation {
      *
      * @return the file system type
      */
+    @Override
     public String getFileSystemType() {
         return m_fileSystemType;
     }

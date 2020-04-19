@@ -44,31 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 8, 2019 (Tobias Urhaug, KNIME GmbH, Berlin, Germany): created
+ *   Apr 24, 2020 (bjoern): created
  */
-package org.knime.filehandling.core.connections.local;
+package org.knime.filehandling.core.connections.location;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.core.node.util.LocalFileSystemBrowser;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.connections.FSPath;
 
 /**
- * Creates a local file system.
+ * Interface that provides a {@link FSPath} object. Since a {@link FSPath} object is always linked to a file system and
+ * file system provider, which may block system resources (open streams, sockets, etc), this interface is also an
+ * {@link AutoCloseable}. Invoking {@link #close()} will release any such blocked resources.
+ *
+ * <p>
+ * The main use case of this interface is when you need to create a lot of {@link FSPath} instances, which may be linked
+ * to ad-hoc file systems, e.g. when mapping a table column with {@link FSLocation} objects to their respective
+ * {@link FSPath} objects.
+ * </p>
  *
  * @author Bjoern Lohrmann, KNIME GmbH
+ * @since 4.2
  */
-public class LocalFSConnection implements FSConnection {
+public interface FSPathProvider extends AutoCloseable {
 
+    FSPath getPath();
 
-
-    @Override
-    public FSFileSystem<?> getFileSystem() {
-        return LocalFileSystem.INSTANCE;
-    }
-
-    @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new LocalFileSystemBrowser();
-    }
 }

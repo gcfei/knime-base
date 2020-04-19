@@ -48,31 +48,58 @@
  */
 package org.knime.filehandling.core.connections;
 
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.Optional;
 
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice.Choice;
 
+import com.google.common.base.Objects;
+
 public abstract class FSFileSystem<T extends FSPath> extends FileSystem {
 
     private final Choice m_fsChoice;
 
-    private final Optional<String> m_fsSpecifier;
+    private final String m_fsSpecifier;
 
     private final String m_workingDirectory;
 
-    public FSFileSystem(final Choice fsChoice, final Optional<String> fsSpecifier, final String workingDir) {
+    public FSFileSystem(final Choice fsChoice, final String fsSpecifier, final String workingDir) {
         m_fsChoice = fsChoice;
         m_fsSpecifier = fsSpecifier;
         m_workingDirectory = workingDir;
     }
 
+    public FSFileSystem(final Choice fsChoice, final String workingDir) {
+        this(fsChoice, null, workingDir);
+    }
+
+
     public Choice getFileSystemChoice() {
         return m_fsChoice;
     }
 
+    /**
+     * Does nothing, since a file system must only be closed by the connection node that instantiated it. Nodes that
+     * only *use* a file system should invoke {@link FSConnection#close()} on the respective {@link FSConnection} object
+     * to release any blocked resources.
+     */
+    @Override
+    public final void close() throws IOException {
+        // do nothing
+    }
+
+    /**
+     * Actually closed this file system and releases any blocked resources (streams, etc). This method must only be
+     * called by the connection node, which has control of the file system lifecycle (hence the reduced visibility).
+     * Implementations are free to increase method visibility for their purposes.
+     *
+     * @throws IOException when something went wrong while closing the file system.
+     */
+    protected abstract void ensureClosed() throws IOException;
+
     public Optional<String> getFileSystemSpecifier() {
-        return m_fsSpecifier;
+        return Optional.ofNullable(m_fsSpecifier);
     }
 
     /**
@@ -87,12 +114,20 @@ public abstract class FSFileSystem<T extends FSPath> extends FileSystem {
         return getPath(m_workingDirectory);
     }
 
-    public T getPath(final FSLocation fsLocation) {
-        if (fsLocation.equals(FSLocation.NULL) || fsLocation.getFileSystemChoice() != m_fsChoice) {
+    public void checkCompatibility(final FSLocationSpec fsLocationSpec) {
+        if (fsLocationSpec.getFileSystemType() == null || Choice.valueOf(fsLocationSpec.getFileSystemType()) != m_fsChoice) {
             throw new IllegalArgumentException(
-                String.format("Only FSLocations of type %s are allowed.", Choice.KNIME_FS));
+                String.format("Only FSLocations of type %s are allowed with this file system.", m_fsChoice));
         }
 
+        if (!Objects.equal(m_fsSpecifier, fsLocationSpec.getFileSystemSpecifier().orElse(null))) {
+            throw new IllegalArgumentException(
+                String.format("Only FSLocations with specifier %s are allowed with this file system.", m_fsSpecifier));
+        }
+    }
+
+    public T getPath(final FSLocation fsLocation) {
+        checkCompatibility(fsLocation);
         return getPath(fsLocation.getPath());
     }
 

@@ -51,7 +51,6 @@ package org.knime.filehandling.core.connections.knimeremote;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Optional;
 
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
 import org.knime.filehandling.core.connections.base.UnixStylePathUtil;
@@ -82,7 +81,7 @@ public class KNIMERemoteFileSystem extends BaseFileSystem<KNIMERemotePath> {
             0,
             PATH_SEPARATOR,
             isConnectedFs ? Choice.CONNECTED_FS : Choice.KNIME_MOUNTPOINT,//
-            Optional.of(baseLocation.getHost()));
+            baseLocation.getHost());
 
         m_mountpoint = baseLocation;
         m_workingDirectory = getPath(PATH_SEPARATOR);

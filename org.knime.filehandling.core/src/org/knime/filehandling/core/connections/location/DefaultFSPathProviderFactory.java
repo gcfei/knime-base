@@ -44,31 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 8, 2019 (Tobias Urhaug, KNIME GmbH, Berlin, Germany): created
+ *   Apr 24, 2020 (bjoern): created
  */
-package org.knime.filehandling.core.connections.local;
+package org.knime.filehandling.core.connections.location;
 
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.core.node.util.LocalFileSystemBrowser;
 import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.connections.FSPath;
 
-/**
- * Creates a local file system.
- *
- * @author Bjoern Lohrmann, KNIME GmbH
- */
-public class LocalFSConnection implements FSConnection {
+class DefaultFSPathProviderFactory extends FSPathProviderFactory {
 
+    private final FSConnection m_fsConnection;
 
+    class DefaultFSPathProvider implements FSPathProvider {
 
-    @Override
-    public FSFileSystem<?> getFileSystem() {
-        return LocalFileSystem.INSTANCE;
+        private final FSLocation m_fsLocation;
+
+        /**
+         * @param fsLocation
+         */
+        public DefaultFSPathProvider(final FSLocation fsLocation) {
+            super();
+            m_fsLocation = fsLocation;
+        }
+
+        @Override
+        public void close() throws Exception {
+            // do nothing
+        }
+
+        @Override
+        public FSPath getPath() {
+            return m_fsConnection.getFileSystem().getPath(m_fsLocation);
+        }
+
+    }
+
+    public DefaultFSPathProviderFactory(final FSConnection fsConnection) {
+        m_fsConnection = fsConnection;
     }
 
     @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new LocalFileSystemBrowser();
+    public void close() throws Exception {
+        m_fsConnection.close();
     }
+
+    @Override
+    public FSPathProvider create(final FSLocation fsLocation) {
+        return new DefaultFSPathProvider(fsLocation);
+    }
+
 }

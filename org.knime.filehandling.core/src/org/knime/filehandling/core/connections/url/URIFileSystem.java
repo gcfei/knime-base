@@ -52,7 +52,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 
 import org.knime.filehandling.core.connections.base.BaseFileSystem;
@@ -75,8 +74,7 @@ public class URIFileSystem extends BaseFileSystem<URIPath> {
             toBaseURI(uri),//
             0L,//
             PATH_SEPARATOR,
-            isConnectedFs ? Choice.CONNECTED_FS : Choice.CUSTOM_URL_FS,//
-            Optional.empty());
+            isConnectedFs ? Choice.CONNECTED_FS : Choice.CUSTOM_URL_FS);
 
         m_baseUri = toBaseURI(uri);
         m_workingDirectory = getPath(PATH_SEPARATOR);

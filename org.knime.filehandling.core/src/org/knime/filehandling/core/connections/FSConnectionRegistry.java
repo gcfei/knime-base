@@ -68,8 +68,17 @@ public class FSConnectionRegistry {
 	 * @param key key for the connection to be retrieved
 	 * @return Optional containing the connection, if present
 	 */
-	public synchronized Optional<FSConnection> retrieve(final String key) {
-		return Optional.ofNullable(m_connections.get(key));
+	@SuppressWarnings("resource")
+    public synchronized Optional<FSConnection> retrieve(final String key) {
+	    final FSConnection fsCon = m_connections.get(key);
+	    if (fsCon != null) {
+	        // all FSConnections that are registered in the registry have be created
+	        // by connection nodes. No other node than the connection node should be able to
+	        // close the file system.
+	        return Optional.of(new UncloseableFSConnection(fsCon));
+	    } else {
+	        return Optional.empty();
+	    }
 	}
 
 	/**
@@ -109,6 +118,4 @@ public class FSConnectionRegistry {
 	public synchronized boolean contains(final String key) {
 		return m_connections.containsKey(key);
 	}
-
-
 }

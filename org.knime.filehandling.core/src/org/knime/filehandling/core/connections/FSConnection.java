@@ -1,7 +1,6 @@
 package org.knime.filehandling.core.connections;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
 
 import org.knime.core.node.util.FileSystemBrowser;
 
@@ -10,14 +9,15 @@ import org.knime.core.node.util.FileSystemBrowser;
  *
  * @author Tobias Urhaug, KNIME GmbH, Berlin, Germany
  */
-public interface FSConnection {
+public interface FSConnection extends AutoCloseable {
 
     /**
      * Closes the file system in this connection and deregisters it from the {@link FSConnectionRegistry}.
      */
-    public default void ensureClosed() {
-        try (FileSystem fileSystem = getFileSystem()) {
-            fileSystem.close();
+    @Override
+    public default void close() {
+        try (FSFileSystem<?> fileSystem = getFileSystem()) {
+            fileSystem.ensureClosed();
             FSConnectionRegistry.getInstance().deregister(this);
         } catch (IOException ex) {
             // not sure what to do here...
@@ -37,5 +37,6 @@ public interface FSConnection {
 	 * @return a file system browser for this connection
 	 */
 	public FileSystemBrowser getFileSystemBrowser();
+
 
 }

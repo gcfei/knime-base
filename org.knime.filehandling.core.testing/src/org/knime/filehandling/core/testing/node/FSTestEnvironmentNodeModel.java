@@ -26,7 +26,7 @@ import org.knime.filehandling.core.testing.integrationtests.FSTestPropertiesReso
 
 /**
  * Node model for the FS Testing node.
- * 
+ *
  * @author Tobias Urhaug, KNIME GmbH, Berlin, Germany
  *
  */
@@ -42,9 +42,9 @@ public class FSTestEnvironmentNodeModel extends NodeModel {
 
     @Override
     protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
-        Properties testProperties = FSTestPropertiesResolver.forWorkflowTests();
-        Map<String, String> configuration = FSTestConfigurationReader.read(m_fsName, testProperties);
-        FSTestInitializer initializer = FSTestInitializerManager.instance().createInitializer(m_fsName, configuration);
+        final Properties testProperties = FSTestPropertiesResolver.forWorkflowTests();
+        final Map<String, String> configuration = FSTestConfigurationReader.read(m_fsName, testProperties);
+        final FSTestInitializer initializer = FSTestInitializerManager.instance().createInitializer(m_fsName, configuration);
 
         m_fsConnection = initializer.getFSConnection();
         FSConnectionRegistry.getInstance().register(m_fsId, m_fsConnection);
@@ -98,7 +98,7 @@ public class FSTestEnvironmentNodeModel extends NodeModel {
 
     @Override
     protected void reset() {
-        m_fsConnection.ensureClosed();
+        m_fsConnection.close();
     }
 
 }

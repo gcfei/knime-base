@@ -42,33 +42,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
- *   Aug 8, 2019 (Tobias Urhaug, KNIME GmbH, Berlin, Germany): created
+ *   Apr 18, 2020 (bjoern): created
  */
-package org.knime.filehandling.core.connections.local;
-
-import org.knime.core.node.util.FileSystemBrowser;
-import org.knime.core.node.util.LocalFileSystemBrowser;
-import org.knime.filehandling.core.connections.FSConnection;
-import org.knime.filehandling.core.connections.FSFileSystem;
+package org.knime.filehandling.core.connections;
 
 /**
- * Creates a local file system.
- *
- * @author Bjoern Lohrmann, KNIME GmbH
+ * 
+ * @author bjoern
  */
-public class LocalFSConnection implements FSConnection {
+public interface FSConnectionConfig {
 
-
-
-    @Override
-    public FSFileSystem<?> getFileSystem() {
-        return LocalFileSystem.INSTANCE;
-    }
-
-    @Override
-    public FileSystemBrowser getFileSystemBrowser() {
-        return new LocalFileSystemBrowser();
-    }
 }
