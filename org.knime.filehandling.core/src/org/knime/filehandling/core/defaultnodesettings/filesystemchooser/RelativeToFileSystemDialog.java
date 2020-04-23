@@ -44,75 +44,88 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 22, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Apr 23, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.filehandling.core.defaultnodesettings.filesystemchooser;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.awt.Component;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import javax.swing.JComboBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.node.util.CheckUtils;
+import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
 
 /**
- * Represents a file system in the {@link FileSystemChooserDialog}.</br>
- * TODO figure out if we can replace it with FileSystemChoice or something similar
+ * FileSystemDialog for the relative to file system.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class FileSystemInfo {
+final class RelativeToFileSystemDialog extends AbstractFileSystemDialog {
 
-    private final String m_identifier;
+    private static final String NO_SPECIFIER_ERROR =
+        "Invalid file system info encountered. For relative to, a file system info must always contain a specifier.";
 
-    private final String m_specifier;
+    private static final String ID = FileSystemChoice.getKnimeFsChoice().getId();
 
-    private final int m_hashCode;
+    private enum Specifier {
 
-    FileSystemInfo(final String identifier, final String specifier) {
-        m_identifier = CheckUtils.checkArgumentNotNull(identifier, "The fileSystemIdentifier must not be null.");
-        m_specifier = specifier;
-        m_hashCode = new HashCodeBuilder().append(m_identifier).append(m_specifier).toHashCode();
+            MOUNTPOINT("knime.mountpoint"), WORKFLOW("knime.workflow");
+
+        // TODO add knime.workflow.data once it's implemented
+
+        private final String m_description;
+
+        private Specifier(final String description) {
+            m_description = description;
+        }
+
+        @Override
+        public String toString() {
+            return m_description;
+        }
     }
 
-    FileSystemInfo(final String identifier) {
-        this(identifier, null);
-    }
+    private final JComboBox<Specifier> m_specifier = new JComboBox<>(Specifier.values());
 
-    String getIdentifier() {
-        return m_identifier;
-    }
+    private final ChangeEvent m_changeEvent = new ChangeEvent(this);
 
-    Optional<String> getSpecifier() {
-        return Optional.ofNullable(m_specifier);
+    RelativeToFileSystemDialog() {
+        super(ID);
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(m_identifier);
-        if (m_specifier != null) {
-            sb.append("; ").append(m_specifier);
-        }
-        return sb.toString();
+    public Component getSpecifierComponent() {
+        return m_specifier;
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof FileSystemInfo) {
-            final FileSystemInfo other = (FileSystemInfo)obj;
-            return Objects.equals(m_identifier, other.m_identifier) && Objects.equals(m_specifier, other.m_specifier);
-        }
-        return false;
+    public boolean hasSpecifierComponent() {
+        return true;
     }
 
     @Override
-    public int hashCode() {
-        return m_hashCode;
+    public FileSystemInfo getFileSystemInfo() {
+        return new FileSystemInfo(ID, (String)m_specifier.getSelectedItem());
+    }
+
+    @Override
+    public void updateSpecifier(final FileSystemInfo fileSystemInfo) {
+        CheckUtils.checkArgumentNotNull(fileSystemInfo.getSpecifier(), NO_SPECIFIER_ERROR);
+        final Specifier specifier = Specifier
+            .valueOf(fileSystemInfo.getSpecifier().orElseThrow(() -> new IllegalArgumentException(NO_SPECIFIER_ERROR)));
+        m_specifier.setSelectedItem(specifier);
+    }
+
+    @Override
+    public void addSpecifierChangeListener(final ChangeListener listener) {
+        m_specifier.addActionListener(e -> listener.stateChanged(m_changeEvent));
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
     }
 
 }

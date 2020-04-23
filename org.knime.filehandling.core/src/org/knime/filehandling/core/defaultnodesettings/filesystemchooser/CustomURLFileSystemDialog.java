@@ -44,75 +44,78 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 22, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Apr 23, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.filehandling.core.defaultnodesettings.filesystemchooser;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.awt.Component;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.knime.core.node.util.CheckUtils;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
 
 /**
- * Represents a file system in the {@link FileSystemChooserDialog}.</br>
- * TODO figure out if we can replace it with FileSystemChoice or something similar
+ * FileSystemDialog for the custom URL file system.</br>
+ * Provides a {@link JSpinner} for timeouts as specifier component.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class FileSystemInfo {
+final class CustomURLFileSystemDialog extends AbstractFileSystemDialog {
 
-    private final String m_identifier;
+    private static final String ID = FileSystemChoice.getCustomFsUrlChoice().getId();
 
-    private final String m_specifier;
+    private final JSpinner m_timeout = createLongSpinner(1000L, 0L, Long.MAX_VALUE, 1000L);
 
-    private final int m_hashCode;
+    private final ChangeEvent m_changeEvent = new ChangeEvent(this);
 
-    FileSystemInfo(final String identifier, final String specifier) {
-        m_identifier = CheckUtils.checkArgumentNotNull(identifier, "The fileSystemIdentifier must not be null.");
-        m_specifier = specifier;
-        m_hashCode = new HashCodeBuilder().append(m_identifier).append(m_specifier).toHashCode();
+    CustomURLFileSystemDialog() {
+        super(ID);
     }
 
-    FileSystemInfo(final String identifier) {
-        this(identifier, null);
-    }
-
-    String getIdentifier() {
-        return m_identifier;
-    }
-
-    Optional<String> getSpecifier() {
-        return Optional.ofNullable(m_specifier);
+    private static JSpinner createLongSpinner(final Long value, final Long min, final Long max, final Long step) {
+        return new JSpinner(new SpinnerNumberModel(value, min, max, step));
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(m_identifier);
-        if (m_specifier != null) {
-            sb.append("; ").append(m_specifier);
-        }
-        return sb.toString();
+    public Component getSpecifierComponent() {
+        return m_timeout;
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof FileSystemInfo) {
-            final FileSystemInfo other = (FileSystemInfo)obj;
-            return Objects.equals(m_identifier, other.m_identifier) && Objects.equals(m_specifier, other.m_specifier);
-        }
-        return false;
+    public boolean hasSpecifierComponent() {
+        return true;
     }
 
     @Override
-    public int hashCode() {
-        return m_hashCode;
+    public FileSystemInfo getFileSystemInfo() {
+        return new FileSystemInfo(ID, m_timeout.getValue().toString());
+    }
+
+    @Override
+    public void addSpecifierChangeListener(final ChangeListener listener) {
+        // the listener expects changes from this dialog
+        m_timeout.addChangeListener(e -> listener.stateChanged(m_changeEvent));
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    protected void updateSpecifier(final FileSystemInfo fileSystemInfo) {
+        // TODO do we want to set a default instead?
+        final String timeoutString = fileSystemInfo.getSpecifier().orElseThrow(
+            () -> new IllegalArgumentException("A FileSystemInfo for a custom url must specify a timeout."));
+        try {
+            final long timeout = Long.parseLong(timeoutString);
+            m_timeout.setValue(timeout);
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Invalid timeout: " + timeoutString);
+        }
     }
 
 }

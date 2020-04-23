@@ -107,6 +107,10 @@ public final class FileSystemChooserDialog {
         notifyListeners();
     }
 
+    public void addChangeListener(final ChangeListener listener) {
+        m_listeners.add(listener);
+    }
+
     private void notifyListeners() {
         m_listeners.forEach(l -> l.stateChanged(m_changeEvent));
     }
@@ -161,6 +165,10 @@ public final class FileSystemChooserDialog {
 
     void setSelectable(final boolean selectable) {
         m_fileSystemComboBox.setSelectable(selectable);
+    }
+
+    void setTooltip(final String tooltip) {
+        m_fileSystemComboBox.setToolTipText(tooltip);
     }
 
     private static class FileSystemDialogListCellRenderer implements ListCellRenderer<FileSystemDialog> {

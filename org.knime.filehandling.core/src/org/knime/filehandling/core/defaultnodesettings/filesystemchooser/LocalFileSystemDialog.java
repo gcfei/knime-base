@@ -44,75 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 22, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Apr 23, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.filehandling.core.defaultnodesettings.filesystemchooser;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.awt.Component;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import javax.swing.event.ChangeListener;
+
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
 
 /**
- * Represents a file system in the {@link FileSystemChooserDialog}.</br>
- * TODO figure out if we can replace it with FileSystemChoice or something similar
+ * FileSystemDialog for the local file system.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class FileSystemInfo {
+final class LocalFileSystemDialog implements FileSystemDialog {
 
-    private final String m_identifier;
+    private static final FileSystemInfo FILE_SYSTEM_INFO =
+        new FileSystemInfo(FileSystemChoice.getLocalFsChoice().getId());
 
-    private final String m_specifier;
-
-    private final int m_hashCode;
-
-    FileSystemInfo(final String identifier, final String specifier) {
-        m_identifier = CheckUtils.checkArgumentNotNull(identifier, "The fileSystemIdentifier must not be null.");
-        m_specifier = specifier;
-        m_hashCode = new HashCodeBuilder().append(m_identifier).append(m_specifier).toHashCode();
-    }
-
-    FileSystemInfo(final String identifier) {
-        this(identifier, null);
-    }
-
-    String getIdentifier() {
-        return m_identifier;
-    }
-
-    Optional<String> getSpecifier() {
-        return Optional.ofNullable(m_specifier);
+    @Override
+    public Component getSpecifierComponent() {
+        throw new NotImplementedException("The local file system has no specifier."
+            + "This indicates a coding error because this method should only be called "
+            + "if hasSpecifierComponent returned true.");
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(m_identifier);
-        if (m_specifier != null) {
-            sb.append("; ").append(m_specifier);
-        }
-        return sb.toString();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof FileSystemInfo) {
-            final FileSystemInfo other = (FileSystemInfo)obj;
-            return Objects.equals(m_identifier, other.m_identifier) && Objects.equals(m_specifier, other.m_specifier);
-        }
+    public boolean hasSpecifierComponent() {
         return false;
     }
 
     @Override
-    public int hashCode() {
-        return m_hashCode;
+    public FileSystemInfo getFileSystemInfo() {
+        return FILE_SYSTEM_INFO;
+    }
+
+    @Override
+    public void update(final FileSystemInfo fileSystemInfo) {
+        CheckUtils.checkArgument(FILE_SYSTEM_INFO.equals(fileSystemInfo),
+            "Incompatible file system info for local file system encountered: %s", fileSystemInfo);
+    }
+
+    @Override
+    public void addSpecifierChangeListener(final ChangeListener listener) {
+        // no specifier -> nothing to listen to
+    }
+
+    @Override
+    public boolean isValid() {
+        // the local file system is always valid
+        return true;
     }
 
 }

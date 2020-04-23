@@ -44,75 +44,74 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 22, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Apr 23, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.filehandling.core.defaultnodesettings.filesystemchooser;
 
-import java.util.Objects;
-import java.util.Optional;
-
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.filehandling.core.connections.FSLocation;
+import org.knime.filehandling.core.data.location.settingsmodel.SettingsModelFSLocation;
 
 /**
- * Represents a file system in the {@link FileSystemChooserDialog}.</br>
- * TODO figure out if we can replace it with FileSystemChoice or something similar
+ * DialogComponent for selecting a file system.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class FileSystemInfo {
+public final class DialogComponentFileSystem extends DialogComponent {
 
-    private final String m_identifier;
+    private final FileSystemChooserDialog m_fileSystemChooser;
 
-    private final String m_specifier;
-
-    private final int m_hashCode;
-
-    FileSystemInfo(final String identifier, final String specifier) {
-        m_identifier = CheckUtils.checkArgumentNotNull(identifier, "The fileSystemIdentifier must not be null.");
-        m_specifier = specifier;
-        m_hashCode = new HashCodeBuilder().append(m_identifier).append(m_specifier).toHashCode();
-    }
-
-    FileSystemInfo(final String identifier) {
-        this(identifier, null);
-    }
-
-    String getIdentifier() {
-        return m_identifier;
-    }
-
-    Optional<String> getSpecifier() {
-        return Optional.ofNullable(m_specifier);
+    /**
+     * Constructor.
+     *
+     * @param model an {@link SettingsModelFSLocation} (note that only file system identifier and specifier are used
+     *            while the path is ignored)
+     */
+    public DialogComponentFileSystem(final SettingsModelFSLocation model) {
+        super(model);
+        final LocalFileSystemDialog local = new LocalFileSystemDialog();
+        final MountpointFileSystemDialog mountpoint = new MountpointFileSystemDialog();
+        final RelativeToFileSystemDialog relativeTo = new RelativeToFileSystemDialog();
+        final CustomURLFileSystemDialog customUrl = new CustomURLFileSystemDialog();
+        m_fileSystemChooser = new FileSystemChooserDialog(local, mountpoint, relativeTo, customUrl);
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(m_identifier);
-        if (m_specifier != null) {
-            sb.append("; ").append(m_specifier);
-        }
-        return sb.toString();
+    protected void updateComponent() {
+        final FSLocation fsLocation = getFSLocation();
+        final FileSystemInfo fsInfo =
+            new FileSystemInfo(fsLocation.getFileSystemType(), fsLocation.getFileSystemSpecifier().orElse(null));
+        m_fileSystemChooser.setFileSystemInfo(fsInfo);
+    }
+
+    private FSLocation getFSLocation() {
+        final SettingsModelFSLocation sm = (SettingsModelFSLocation)getModel();
+        return sm.getLocation();
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof FileSystemInfo) {
-            final FileSystemInfo other = (FileSystemInfo)obj;
-            return Objects.equals(m_identifier, other.m_identifier) && Objects.equals(m_specifier, other.m_specifier);
-        }
-        return false;
+    protected void validateSettingsBeforeSave() throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
     }
 
     @Override
-    public int hashCode() {
-        return m_hashCode;
+    protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) throws NotConfigurableException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void setEnabledComponents(final boolean enabled) {
+
+    }
+
+    @Override
+    public void setToolTipText(final String text) {
+        m_fileSystemChooser.setTooltip(text);
     }
 
 }
