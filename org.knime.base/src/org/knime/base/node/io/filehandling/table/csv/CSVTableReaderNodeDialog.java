@@ -58,11 +58,13 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -140,6 +142,12 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
 
     private final MultiTableReadConfig<CSVTableReaderConfig> m_config;
 
+    private final JButton m_startAutodetection;
+
+    private CSVFormatAutoDetectionSwingWorker m_formatAutoDetectionSwingWorker;
+
+    private JProgressBar m_analyzeProgressBar;
+
     /** Create new CsvTableReader dialog. */
     CSVTableReaderNodeDialog(final SettingsModelFileChooser2 fileChooserModel,
         final MultiTableReadConfig<CSVTableReaderConfig> config) {
@@ -173,6 +181,7 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_allowShortLinesChecker = new JCheckBox("Support short lines");
         m_skipEmptyLinesChecker = new JCheckBox("Skip empty lines");
         m_replaceQuotedEmptyStringChecker = new JCheckBox("Replace empty quoted strings with missing values");
+        m_startAutodetection = new JButton("Autodetect CSV format");
 
         m_skipFirstLinesChecker = new JCheckBox("Skip first lines ");
         m_skipFirstLinesSpinner = new JSpinner(new SpinnerNumberModel(skipOne, rowStart, rowEnd, stepSize));
@@ -195,14 +204,38 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_limitAnalysisChecker.addChangeListener(e -> controlSpinner(m_limitAnalysisChecker, m_limitAnalysisSpinner));
         m_limitAnalysisChecker.doClick();
 
-        addTab("Options", initLayout());
+        m_config = config;
+
+        m_analyzeProgressBar = new JProgressBar();
+        m_analyzeProgressBar.setIndeterminate(false);
+        m_analyzeProgressBar.setStringPainted(false);
+        m_analyzeProgressBar.setValue(0);
+
+        final JPanel panel = initLayout();
+        addTab("Options", panel);
+
+        m_startAutodetection.addActionListener(e -> {
+            if (m_formatAutoDetectionSwingWorker != null) {
+                m_formatAutoDetectionSwingWorker.cancel(true);
+                m_formatAutoDetectionSwingWorker = null;
+            }
+
+            saveEncodingAndSkipLines();
+
+            final SettingsModelFileChooser2 model = (SettingsModelFileChooser2)m_filePanel.getModel();
+
+            m_formatAutoDetectionSwingWorker = new CSVFormatAutoDetectionSwingWorker(model,
+                m_config.getTableReadConfig().getReaderSpecificConfig(), m_colDelimiterField, m_rowDelimiterField,
+                m_quoteField, m_quoteEscapeField, m_commentStartField, m_analyzeProgressBar, panel);
+
+            m_formatAutoDetectionSwingWorker.execute();
+        });
+
+
         addTab("Limit Rows", getLimitRowsPanel());
 
         m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
         addTab("Encoding", m_encodingPanel);
-
-        m_config = config;
-
     }
 
     /**
@@ -310,6 +343,16 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy += 1;
         optionsPanel.add(m_replaceQuotedEmptyStringChecker, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionsPanel.add(m_startAutodetection, gbc);
+
+        gbc.gridx++;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        optionsPanel.add(m_analyzeProgressBar, gbc);
 
         //empty panel to eat up extra space
         gbc.gridy += 1;
@@ -447,6 +490,17 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         csvReaderConfig.setCharSetName(s.getCharsetName());
     }
 
+    private void saveEncodingAndSkipLines() {
+        CSVTableReaderConfig csvReaderConfig = m_config.getTableReadConfig().getReaderSpecificConfig();
+
+        csvReaderConfig.setSkipLines(m_skipFirstLinesChecker.isSelected());
+        csvReaderConfig.setNumLinesToSkip((Long)m_skipFirstLinesSpinner.getValue());
+
+        FileReaderNodeSettings s = new FileReaderNodeSettings();
+        m_encodingPanel.overrideSettings(s);
+        csvReaderConfig.setCharSetName(s.getCharsetName());
+    }
+
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
@@ -547,5 +601,4 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
 
         }
     }
-
 }
