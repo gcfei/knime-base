@@ -48,21 +48,30 @@
  */
 package org.knime.base.node.preproc.topk;
 
-import javax.swing.BoxLayout;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
 import javax.swing.JPanel;
 
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 
 /**
+ * NodeDialog tab for the Top K Selector Node.
  *
  * @author Timmo Waller-Ehrat, KNIME GmbH, Konstanz, Germany
+ * @author Lars Schweikardt, KNIME GmbH, Konstanz, Germany
  */
-final class AdvancedSettings {
-
-    private JPanel m_panel;
+final class AdvancedSettingsNodeDialog {
 
     private final TopKSelectorSettings m_settings;
+
+    private final DialogComponentBoolean m_missingsToEnd;
+
+    private final DialogComponentButtonGroup m_outputOrder;
+
+    private final DialogComponentButtonGroup m_topKMode;
 
     /**
      * Creates a new Panel with a checkBox for "Move missing cells to end of the list" and a GroupBox for choosing the
@@ -70,34 +79,60 @@ final class AdvancedSettings {
      *
      * @param settings TopKSelectorSettings object to load and save settings
      */
-    public AdvancedSettings(final TopKSelectorSettings settings) {
+    public AdvancedSettingsNodeDialog(final TopKSelectorSettings settings) {
         m_settings = settings;
-
-        m_panel = new JPanel();
-        m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
-
-        final DialogComponentBoolean missingsToEnd =
+        m_missingsToEnd =
             new DialogComponentBoolean(m_settings.getMissingToEndModel(), "Move missing cells to end of sorted list");
-        m_panel.add(missingsToEnd.getComponentPanel());
-
-        final DialogComponentButtonGroup outputOrder = new DialogComponentButtonGroup(m_settings.getOutputOrderModel(),
-            "Output order", true, OutputOrder.values());
-        m_panel.add(outputOrder.getComponentPanel());
+        m_outputOrder = new DialogComponentButtonGroup(m_settings.getOutputOrderModel(), "Output order", true,
+            OutputOrder.values());
+        m_topKMode =
+            new DialogComponentButtonGroup(m_settings.getTopKModeModel(), "Top K Mode", true, TopKMode.values());
     }
 
+    /**
+     * @return the JPanel
+     */
     public JPanel getPanel() {
-        return m_panel;
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+
+        ++gbc.gridy;
+        panel.add(createInnerPanel(m_missingsToEnd.getComponentPanel()), gbc);
+        ++gbc.gridy;
+        panel.add(createInnerPanel(m_outputOrder.getComponentPanel()), gbc);
+        ++gbc.gridy;
+        panel.add(createInnerPanel(m_topKMode.getComponentPanel()), gbc);
+
+        return panel;
     }
 
-//    public void load(final NodeSettingsRO settings) throws NotConfigurableException {
-//        try {
-//            m_settings.loadValidatedSettingsFrom(settings);
-//        } catch (InvalidSettingsException e) {
-//            throw new NotConfigurableException("Couldn't load settings", e);
-//        }
-//    }
-//
-//    public void save(final NodeSettingsWO settings) {
-//        m_settings.saveSettingsTo(settings);
-//    }
+    /**
+     * Creates a JPanel {@link JPanel} with the passed {@link Component}.
+     *
+     * @param component Component which will be added to the JPanel
+     * @return a {@link JPanel}
+     */
+    private static JPanel createInnerPanel(final Component component) {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = createInnerPanelGridBagConstraint();
+        panel.add(component, gbc);
+        return panel;
+    }
+
+    /**
+     * Creates the default {@link GridBagConstraints} for the inner {@link JPanel}
+     *
+     * @return the default {@link GridBagConstraints}
+     */
+    private static GridBagConstraints createInnerPanelGridBagConstraint() {
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        return gbc;
+    }
 }

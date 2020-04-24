@@ -214,6 +214,8 @@ final class TopKSelectorNodeModel extends NodeModel {
         final Comparator<DataRow> inverted = (i, j) -> -comparator.compare(i, j);
         if (m_settings.getK() == 1) {
             return new TopSelector(inverted);
+        } else if (m_settings.getTopKMode() == TopKMode.TOP_K_ALL_ROWS_W_UNIQUE) {
+            return new HeapTopKUniqueRowsSelector(inverted, m_settings.getK());
         } else {
             return new HeapTopKSelector(inverted, m_settings.getK());
         }

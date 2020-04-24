@@ -81,7 +81,7 @@ final class TopKSelectorNodeDialog extends NodeDialogPane {
 
     private final DynamicSorterPanel m_panel;
 
-    private final AdvancedSettings m_advancedSettings;
+    private final AdvancedSettingsNodeDialog m_advancedSettings;
 
     /**
      *
@@ -91,7 +91,7 @@ final class TopKSelectorNodeDialog extends NodeDialogPane {
         super();
 
         m_settings = new TopKSelectorSettings();
-        m_advancedSettings = new AdvancedSettings(m_settings);
+        m_advancedSettings = new AdvancedSettingsNodeDialog(m_settings);
 
         m_panel = new DynamicSorterPanel(TopKSelectorNodeModel.INCLUDELIST_KEY, TopKSelectorNodeModel.SORTORDER_KEY);
 

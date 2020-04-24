@@ -34,6 +34,12 @@
 		<li>Retain order: Ensures that the rows in the output are the same as in the input.</li>
 		<li>Sort output: The rows in the output are sorted according to the specified criteria.</li>
 		</ul></option>
+		<option name="Top K Mode">Specifies the mode for the top K selection of the output
+		<ul>
+		<li>Top K rows: Returns the top K rows based on their first occurrence in the input table.</li>
+		<li>Top K rows with unique values: Returns all occurrences of the top K rows.</li>
+		</ul></option>
+		
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input Table">Table to select rows from.</inPort>
