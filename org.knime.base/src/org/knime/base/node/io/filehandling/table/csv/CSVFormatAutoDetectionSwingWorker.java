@@ -50,15 +50,15 @@ package org.knime.base.node.io.filehandling.table.csv;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.JPanel;
+import javax.swing.JButton;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 
@@ -76,7 +76,7 @@ import com.univocity.parsers.csv.CsvParserSettings;
  *
  * @author Timmo Waller-Ehrat, KNIME GmbH, Konstanz, Germany
  */
-final class CSVFormatAutoDetectionSwingWorker extends SwingWorkerWithContext<CsvFormat, Integer> {
+final class CSVFormatAutoDetectionSwingWorker extends SwingWorkerWithContext<CsvFormat, Double> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(CSVFormatAutoDetectionSwingWorker.class);
 
@@ -88,93 +88,100 @@ final class CSVFormatAutoDetectionSwingWorker extends SwingWorkerWithContext<Csv
 
     private final JTextField m_quoteEscapeField;
 
-    private final JTextField m_commentStartField;
+    private final JButton m_startAutodetection;
 
     private final JProgressBar m_analyzeProgressBar;
 
-    private final JPanel m_panel;
-
     private final SettingsModelFileChooser2 m_model;
 
-    private final CSVTableReaderConfig m_csvReaderconfig;
+    private final Charset m_charset;
+
+    private final boolean m_skipLines;
+
+    private final long m_numLinesToSkip;
+
+    private final CsvParser m_parser;
 
     private BufferedReader m_reader;
 
-    public CSVFormatAutoDetectionSwingWorker(final SettingsModelFileChooser2 model, final CSVTableReaderConfig config,
-        final JTextField colDelimiterField, final JTextField rowDelimiterField, final JTextField quoteField,
-        final JTextField quoteEscapeField, final JTextField commentStartField, final JProgressBar analyzeProgressBar,
-        final JPanel panel) {
+    public CSVFormatAutoDetectionSwingWorker(final SettingsModelFileChooser2 model, final Charset charset,
+        final boolean skipLines, final long numLinesToSkip, final JTextField colDelimiterField,
+        final JTextField rowDelimiterField, final JTextField quoteField, final JTextField quoteEscapeField,
+        final JProgressBar analyzeProgressBar, final JButton startAutodetection) {
         m_colDelimiterField = colDelimiterField;
         m_rowDelimiterField = rowDelimiterField;
         m_quoteField = quoteField;
         m_quoteEscapeField = quoteEscapeField;
-        m_commentStartField = commentStartField;
         m_analyzeProgressBar = analyzeProgressBar;
-        m_panel = panel;
         m_model = model;
-        m_csvReaderconfig = config;
+        m_charset = charset;
+        m_skipLines = skipLines;
+        m_numLinesToSkip = numLinesToSkip;
+        m_startAutodetection = startAutodetection;
+
+        final CsvParserSettings settings = new CsvParserSettings();
+        settings.detectFormatAutomatically();
+        m_parser = new CsvParser(settings);
     }
 
     @Override
     protected CsvFormat doInBackgroundWithContext() throws IOException {
-        try (InputStream inputStream =
-            new CountingInputStream(Files.newInputStream(Paths.get(m_model.getPathOrURL())))) {
+        final Path path = Paths.get(m_model.getPathOrURL());
 
-            final String charSetName = m_csvReaderconfig.getCharSetName();
-            final Charset charset = charSetName == null ? Charset.defaultCharset() : Charset.forName(charSetName);
-            m_reader = BomEncodingUtils.createBufferedReader(inputStream, charset);
-            if (m_csvReaderconfig.skipLines()) {
-                skipLines(m_csvReaderconfig.getNumLinesToSkip());
-            }
-            final CsvParserSettings settings = m_csvReaderconfig.getSettings();
-            final CsvFormat defaultFormat = new CsvFormat();
-            defaultFormat.setComment('#');
-            settings.setFormat(defaultFormat);
-            settings.detectFormatAutomatically();
+        try (CountingInputStream inputStream = new CountingInputStream(Files.newInputStream(path))) {
 
-            final CsvParser parser = new CsvParser(settings);
-            parser.beginParsing(m_reader);
+            final double doubleSize = Files.size(Paths.get(m_model.getPathOrURL()));
+            m_analyzeProgressBar.setValue(0);
+            m_analyzeProgressBar.setVisible(true);
 
-            int counter = 0;
-            while ((parser.parseNext()) != null) {
-                publish(counter);
-                counter++;
+            m_reader = BomEncodingUtils.createBufferedReader(inputStream, m_charset);
+            if (m_skipLines) {
+                skipLines(m_numLinesToSkip);
             }
 
-            parser.stopParsing();
+            m_parser.beginParsing(m_reader);
 
-            return parser.getDetectedFormat();
+            m_analyzeProgressBar.setVisible(true);
+            while (m_parser.parseNext() != null) {
+                final double progress = (inputStream.getCount() / doubleSize);
+                publish(progress);
+            }
+
+            m_parser.stopParsing();
+            m_reader.close();
+
+            return m_parser.getDetectedFormat();
         }
     }
 
     @Override
-    protected void processWithContext(final List<Integer> chunks) {
-        final int progress = chunks.get(chunks.size() - 1);
-        m_analyzeProgressBar.setValue(progress);
-        m_panel.revalidate();
-        m_panel.repaint();
+    protected void processWithContext(final List<Double> chunks) {
+        final double progress = chunks.get(chunks.size() - 1) * 100;
+        m_analyzeProgressBar.setValue((int)Math.round(progress));
     }
 
     @Override
     protected void doneWithContext() {
         try {
-            m_analyzeProgressBar.setVisible(false);
-            updateTextFields(get());
+            updateUI(get());
         } catch (final ExecutionException e) {
             if (!(e.getCause() instanceof InterruptedException)) {
                 LOGGER.debug(e.getMessage(), e);
             }
         } catch (InterruptedException | CancellationException ex) {
-            // ignore
+            // early stop, use results so far collected
+            updateUI(m_parser.getDetectedFormat());
         }
     }
 
-    private void updateTextFields(final CsvFormat format) {
+    private void updateUI(final CsvFormat format) {
+        m_startAutodetection.setText(CSVTableReaderNodeDialog.START_AUTODETECT_LABEL);
+        m_analyzeProgressBar.setVisible(false);
+        m_analyzeProgressBar.setValue(0);
         m_colDelimiterField.setText(format.getDelimiterString());
         m_rowDelimiterField.setText(EscapeUtils.escape(format.getLineSeparatorString()));
         m_quoteField.setText(Character.toString(format.getQuote()));
         m_quoteEscapeField.setText(Character.toString(format.getQuoteEscape()));
-        m_commentStartField.setText(Character.toString(format.getComment()));
     }
 
     private void skipLines(final long n) throws IOException {

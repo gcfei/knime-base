@@ -48,11 +48,14 @@
  */
 package org.knime.base.node.io.filehandling.table.csv;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.nio.charset.Charset;
+import java.util.Optional;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -93,6 +96,10 @@ import org.knime.filehandling.core.node.table.reader.config.TableReadConfig;
  * @author Temesgen H. Dadi, KNIME GmbH, Berlin, Germany
  */
 final class CSVTableReaderNodeDialog extends NodeDialogPane {
+
+    static final String START_AUTODETECT_LABEL = "Autodetect";
+
+    private static final String AUTODETECT_EARLY_STOP_LABEL = "Stop Early";
 
     private final DialogComponentFileChooser2 m_filePanel;
 
@@ -181,7 +188,7 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_allowShortLinesChecker = new JCheckBox("Support short lines");
         m_skipEmptyLinesChecker = new JCheckBox("Skip empty lines");
         m_replaceQuotedEmptyStringChecker = new JCheckBox("Replace empty quoted strings with missing values");
-        m_startAutodetection = new JButton("Autodetect CSV format");
+        m_startAutodetection = new JButton(START_AUTODETECT_LABEL);
 
         m_skipFirstLinesChecker = new JCheckBox("Skip first lines ");
         m_skipFirstLinesSpinner = new JSpinner(new SpinnerNumberModel(skipOne, rowStart, rowEnd, stepSize));
@@ -209,29 +216,24 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_analyzeProgressBar = new JProgressBar();
         m_analyzeProgressBar.setIndeterminate(false);
         m_analyzeProgressBar.setStringPainted(false);
+        m_analyzeProgressBar.setVisible(false);
+        m_analyzeProgressBar.setMaximum(100);
         m_analyzeProgressBar.setValue(0);
 
-        final JPanel panel = initLayout();
-        addTab("Options", panel);
-
         m_startAutodetection.addActionListener(e -> {
-            if (m_formatAutoDetectionSwingWorker != null) {
-                m_formatAutoDetectionSwingWorker.cancel(true);
-                m_formatAutoDetectionSwingWorker = null;
+            if (e.getActionCommand().equals(START_AUTODETECT_LABEL)) {
+                m_startAutodetection.setText(AUTODETECT_EARLY_STOP_LABEL);
+                startFormatAutoDetection();
+            } else {
+                m_startAutodetection.setText(START_AUTODETECT_LABEL);
+                if (m_formatAutoDetectionSwingWorker != null) {
+                    m_formatAutoDetectionSwingWorker.cancel(true);
+                    m_formatAutoDetectionSwingWorker = null;
+                }
             }
-
-            saveEncodingAndSkipLines();
-
-            final SettingsModelFileChooser2 model = (SettingsModelFileChooser2)m_filePanel.getModel();
-
-            m_formatAutoDetectionSwingWorker = new CSVFormatAutoDetectionSwingWorker(model,
-                m_config.getTableReadConfig().getReaderSpecificConfig(), m_colDelimiterField, m_rowDelimiterField,
-                m_quoteField, m_quoteEscapeField, m_commentStartField, m_analyzeProgressBar, panel);
-
-            m_formatAutoDetectionSwingWorker.execute();
         });
 
-
+        addTab("Options", initLayout());
         addTab("Limit Rows", getLimitRowsPanel());
 
         m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
@@ -299,67 +301,101 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
 
     private JPanel createOptionsPanel() {
         final GridBagConstraints gbc = createAndInitGBC();
-        JPanel optionsPanel = new JPanel(new GridBagLayout());
+        final JPanel optionsPanel = new JPanel(new GridBagLayout());
         optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Reader options:"));
 
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        optionsPanel.add(createAutoDetectOptionsPanel(), gbc);
+        gbc.gridy++;
+        optionsPanel.add(createOptionsSubPanel(), gbc);
+
+        return optionsPanel;
+    }
+
+    private JPanel createAutoDetectOptionsPanel() {
+        final JPanel autoDetectPanel = new JPanel(new GridBagLayout());
+        autoDetectPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        final GridBagConstraints gbc = createAndInitGBC();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.FIRST_LINE_START;
-        optionsPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
+        autoDetectPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
+
         gbc.gridx += 1;
-        optionsPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+        autoDetectPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+
         gbc.gridx += 1;
         gbc.weightx = 1;
-        optionsPanel.add(new JPanel(), gbc);
+        autoDetectPanel.add(new JPanel(), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
         gbc.weightx = 0;
-        optionsPanel.add(getInFlowLayout(m_quoteField, new JLabel("Quote Char ")), gbc);
+        autoDetectPanel.add(getInFlowLayout(m_quoteField, new JLabel("Quote Char ")), gbc);
+
         gbc.gridx += 1;
         gbc.weightx = 1;
-        optionsPanel.add(getInFlowLayout(m_quoteEscapeField, new JLabel("Quote Escape Char ")), gbc);
+        autoDetectPanel.add(getInFlowLayout(m_quoteEscapeField, new JLabel("Quote Escape Char ")), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        gbc.weightx = 0;
-        optionsPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        optionsPanel.add(m_hasColHeaderChecker, gbc);
-        gbc.gridx += 1;
-        optionsPanel.add(m_hasRowHeaderChecker, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        optionsPanel.add(m_allowShortLinesChecker, gbc);
-
-        gbc.gridx += 1;
-        optionsPanel.add(m_skipEmptyLinesChecker, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        optionsPanel.add(m_replaceQuotedEmptyStringChecker, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        optionsPanel.add(m_startAutodetection, gbc);
-
-        gbc.gridx++;
-        gbc.gridwidth = 2;
+        gbc.insets = new Insets(5, 9, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        autoDetectPanel.add(m_startAutodetection, gbc);
+
+        gbc.gridx += 1;
         gbc.anchor = GridBagConstraints.CENTER;
-        optionsPanel.add(m_analyzeProgressBar, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        autoDetectPanel.add(m_analyzeProgressBar, gbc);
+
+        return autoDetectPanel;
+    }
+
+    private JPanel createOptionsSubPanel() {
+        final JPanel optionSubPanel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = createAndInitGBC();
+        gbc.insets = new Insets(5, 6, 5, 5);
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        gbc.weightx = 0;
+        optionSubPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
+
+        JPanel tempPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints tempGbc = createAndInitGBC();
+        tempPanel.add(m_hasColHeaderChecker, tempGbc);
+        tempGbc.gridx += 1;
+        tempGbc.insets = new Insets(0, 26, 0, 0);
+        tempPanel.add(m_hasRowHeaderChecker, tempGbc);
+
+        gbc.insets = new Insets(5, 8, 5, 5);
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionSubPanel.add(tempPanel, gbc);
+
+        tempPanel = new JPanel(new GridBagLayout());
+        tempGbc = createAndInitGBC();
+        tempPanel.add(m_allowShortLinesChecker, tempGbc);
+        tempGbc.gridx += 1;
+        tempGbc.insets = new Insets(0, 28, 0, 0);
+        tempPanel.add(m_skipEmptyLinesChecker, tempGbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionSubPanel.add(tempPanel, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionSubPanel.add(m_replaceQuotedEmptyStringChecker, gbc);
 
         //empty panel to eat up extra space
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.weighty = 1;
-        optionsPanel.add(new JPanel(), gbc);
-        return optionsPanel;
+        optionSubPanel.add(new JPanel(), gbc);
+
+        return optionSubPanel;
     }
 
     /**
@@ -490,17 +526,6 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         csvReaderConfig.setCharSetName(s.getCharsetName());
     }
 
-    private void saveEncodingAndSkipLines() {
-        CSVTableReaderConfig csvReaderConfig = m_config.getTableReadConfig().getReaderSpecificConfig();
-
-        csvReaderConfig.setSkipLines(m_skipFirstLinesChecker.isSelected());
-        csvReaderConfig.setNumLinesToSkip((Long)m_skipFirstLinesSpinner.getValue());
-
-        FileReaderNodeSettings s = new FileReaderNodeSettings();
-        m_encodingPanel.overrideSettings(s);
-        csvReaderConfig.setCharSetName(s.getCharsetName());
-    }
-
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
@@ -600,5 +625,18 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
                 throw new NotConfigurableException("Unknown spec merge mode " + m_config.getSpecMergeMode());
 
         }
+    }
+
+    private void startFormatAutoDetection() {
+        final SettingsModelFileChooser2 model = (SettingsModelFileChooser2)m_filePanel.getModel();
+        final Optional<String> charsetName = m_encodingPanel.getSelectedCharsetName();
+        final Charset charset = charsetName.isPresent() ? Charset.forName(charsetName.get()) : Charset.defaultCharset();
+
+        m_formatAutoDetectionSwingWorker = new CSVFormatAutoDetectionSwingWorker(model, charset,
+            m_skipFirstRowsChecker.isEnabled(), (long)m_skipFirstRowsSpinner.getValue(), m_colDelimiterField,
+            m_rowDelimiterField, m_quoteField, m_quoteEscapeField, m_analyzeProgressBar, m_startAutodetection);
+
+        m_formatAutoDetectionSwingWorker.execute();
+
     }
 }
