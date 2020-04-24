@@ -90,8 +90,8 @@ final class CustomURLFileSystemDialog extends AbstractFileSystemDialog {
     }
 
     @Override
-    public FileSystemInfo getFileSystemInfo() {
-        return new FileSystemInfo(ID, m_timeout.getValue().toString());
+    public FSSpec getFSSpec() {
+        return new FSSpec(ID, m_timeout.getValue().toString());
     }
 
     @Override
@@ -106,7 +106,7 @@ final class CustomURLFileSystemDialog extends AbstractFileSystemDialog {
     }
 
     @Override
-    protected void updateSpecifier(final FileSystemInfo fileSystemInfo) {
+    protected void updateSpecifier(final FSSpec fileSystemInfo) {
         // TODO do we want to set a default instead?
         final String timeoutString = fileSystemInfo.getSpecifier().orElseThrow(
             () -> new IllegalArgumentException("A FileSystemInfo for a custom url must specify a timeout."));

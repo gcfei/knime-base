@@ -82,8 +82,8 @@ public final class DialogComponentFileSystem extends DialogComponent {
     @Override
     protected void updateComponent() {
         final FSLocation fsLocation = getFSLocation();
-        final FileSystemInfo fsInfo =
-            new FileSystemInfo(fsLocation.getFileSystemType(), fsLocation.getFileSystemSpecifier().orElse(null));
+        final FSSpec fsInfo =
+            new FSSpec(fsLocation.getFileSystemType(), fsLocation.getFileSystemSpecifier().orElse(null));
         m_fileSystemChooser.setFileSystemInfo(fsInfo);
     }
 
@@ -106,7 +106,7 @@ public final class DialogComponentFileSystem extends DialogComponent {
 
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-
+        //TODO
     }
 
     @Override

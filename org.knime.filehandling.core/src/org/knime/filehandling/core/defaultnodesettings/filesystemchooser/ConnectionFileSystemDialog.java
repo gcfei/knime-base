@@ -44,75 +44,53 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 22, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Apr 24, 2020 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.filehandling.core.defaultnodesettings.filesystemchooser;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.awt.Component;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.knime.core.node.util.CheckUtils;
+import javax.swing.event.ChangeListener;
+
+import org.knime.filehandling.core.connections.FSConnection;
 
 /**
- * Represents a file system in the {@link FileSystemChooserDialog}.</br>
- * TODO figure out if we can replace it with FileSystemChoice or something similar
+ * FileSystemDialog for file systems provided via an {@link FSConnection}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class FileSystemInfo {
+final class ConnectionFileSystemDialog implements FileSystemDialog {
 
-    private final String m_identifier;
-
-    private final String m_specifier;
-
-    private final int m_hashCode;
-
-    FileSystemInfo(final String identifier, final String specifier) {
-        m_identifier = CheckUtils.checkArgumentNotNull(identifier, "The fileSystemIdentifier must not be null.");
-        m_specifier = specifier;
-        m_hashCode = new HashCodeBuilder().append(m_identifier).append(m_specifier).toHashCode();
-    }
-
-    FileSystemInfo(final String identifier) {
-        this(identifier, null);
-    }
-
-    String getIdentifier() {
-        return m_identifier;
-    }
-
-    Optional<String> getSpecifier() {
-        return Optional.ofNullable(m_specifier);
+    @Override
+    public Component getSpecifierComponent() {
+        return null;
     }
 
     @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder(m_identifier);
-        if (m_specifier != null) {
-            sb.append("; ").append(m_specifier);
-        }
-        return sb.toString();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof FileSystemInfo) {
-            final FileSystemInfo other = (FileSystemInfo)obj;
-            return Objects.equals(m_identifier, other.m_identifier) && Objects.equals(m_specifier, other.m_specifier);
-        }
+    public boolean hasSpecifierComponent() {
         return false;
     }
 
     @Override
-    public int hashCode() {
-        return m_hashCode;
+    public FSSpec getFSSpec() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void update(final FSSpec fileSystemInfo) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void addSpecifierChangeListener(final ChangeListener listener) {
+        // there is no specifier
+    }
+
+    @Override
+    public boolean isValid() {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

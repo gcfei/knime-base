@@ -63,8 +63,8 @@ import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
  */
 final class LocalFileSystemDialog implements FileSystemDialog {
 
-    private static final FileSystemInfo FILE_SYSTEM_INFO =
-        new FileSystemInfo(FileSystemChoice.getLocalFsChoice().getId());
+    private static final FSSpec FILE_SYSTEM_INFO =
+        new FSSpec(FileSystemChoice.getLocalFsChoice().getId());
 
     @Override
     public Component getSpecifierComponent() {
@@ -79,12 +79,12 @@ final class LocalFileSystemDialog implements FileSystemDialog {
     }
 
     @Override
-    public FileSystemInfo getFileSystemInfo() {
+    public FSSpec getFSSpec() {
         return FILE_SYSTEM_INFO;
     }
 
     @Override
-    public void update(final FileSystemInfo fileSystemInfo) {
+    public void update(final FSSpec fileSystemInfo) {
         CheckUtils.checkArgument(FILE_SYSTEM_INFO.equals(fileSystemInfo),
             "Incompatible file system info for local file system encountered: %s", fileSystemInfo);
     }

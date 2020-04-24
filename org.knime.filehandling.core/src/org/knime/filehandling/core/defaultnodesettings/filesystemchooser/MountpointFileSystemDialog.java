@@ -100,8 +100,8 @@ final class MountpointFileSystemDialog extends AbstractFileSystemDialog {
     }
 
     @Override
-    public FileSystemInfo getFileSystemInfo() {
-        return new FileSystemInfo(ID, getSelected().getId());
+    public FSSpec getFSSpec() {
+        return new FSSpec(ID, getSelected().getId());
     }
 
     private void setSelected(final String mountpoint) {
@@ -117,7 +117,7 @@ final class MountpointFileSystemDialog extends AbstractFileSystemDialog {
     }
 
     @Override
-    protected void updateSpecifier(final FileSystemInfo fileSystemInfo) {
+    protected void updateSpecifier(final FSSpec fileSystemInfo) {
         // TODO we might want to disable events during updating
         updateMountpoints();
         setSelected(fileSystemInfo.getSpecifier()

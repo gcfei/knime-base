@@ -106,12 +106,12 @@ final class RelativeToFileSystemDialog extends AbstractFileSystemDialog {
     }
 
     @Override
-    public FileSystemInfo getFileSystemInfo() {
-        return new FileSystemInfo(ID, (String)m_specifier.getSelectedItem());
+    public FSSpec getFSSpec() {
+        return new FSSpec(ID, (String)m_specifier.getSelectedItem());
     }
 
     @Override
-    public void updateSpecifier(final FileSystemInfo fileSystemInfo) {
+    public void updateSpecifier(final FSSpec fileSystemInfo) {
         CheckUtils.checkArgumentNotNull(fileSystemInfo.getSpecifier(), NO_SPECIFIER_ERROR);
         final Specifier specifier = Specifier
             .valueOf(fileSystemInfo.getSpecifier().orElseThrow(() -> new IllegalArgumentException(NO_SPECIFIER_ERROR)));

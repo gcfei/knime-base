@@ -103,7 +103,7 @@ public final class FileSystemChooserDialog {
         final FileSystemDialog fsd = (FileSystemDialog)m_fileSystemComboBox.getSelectedItem();
         // TODO can fsd be null?
         final CardLayout cardLayout = (CardLayout)m_specifierPanel.getLayout();
-        cardLayout.show(m_panel, fsd.hasSpecifierComponent() ? fsd.getFileSystemInfo().getIdentifier() : NO_SPECIFIER);
+        cardLayout.show(m_panel, fsd.hasSpecifierComponent() ? fsd.getFSSpec().getIdentifier() : NO_SPECIFIER);
         notifyListeners();
     }
 
@@ -126,7 +126,7 @@ public final class FileSystemChooserDialog {
     private void addSpecifierCard(final FileSystemDialog fsd) {
         fsd.addSpecifierChangeListener(e -> notifyListeners());
         final Component specifierComponent = fsd.getSpecifierComponent();
-        m_specifierPanel.add(specifierComponent, fsd.getFileSystemInfo());
+        m_specifierPanel.add(specifierComponent, fsd.getFSSpec());
     }
 
     private void setupTopLevelPanel() {
@@ -140,21 +140,21 @@ public final class FileSystemChooserDialog {
         m_panel.add(m_specifierPanel, gbc);
     }
 
-    FileSystemInfo getFileSystemInfo() {
+    FSSpec getFileSystemInfo() {
         // TODO can this be null? And what then?
         final FileSystemDialog fsd = getSelectedFileSystem();
-        return fsd.getFileSystemInfo();
+        return fsd.getFSSpec();
     }
 
     private FileSystemDialog getSelectedFileSystem() {
         return (FileSystemDialog)m_fileSystemComboBox.getSelectedItem();
     }
 
-    void setFileSystemInfo(final FileSystemInfo fileSystemInfo) {
+    void setFileSystemInfo(final FSSpec fileSystemInfo) {
         final String id =
             CheckUtils.checkArgumentNotNull(fileSystemInfo, "The fileSystemInfo must not be null.").getIdentifier();
         final FileSystemDialog newlySelected = m_fileSystemDialogs.stream()//
-            .filter(d -> d.getFileSystemInfo().getIdentifier().equals(id))//
+            .filter(d -> d.getFSSpec().getIdentifier().equals(id))//
             .findFirst()//
             .orElseThrow(() -> new IllegalArgumentException(
                 String.format("Unknown file system identifier '%s' encountered.", id)));

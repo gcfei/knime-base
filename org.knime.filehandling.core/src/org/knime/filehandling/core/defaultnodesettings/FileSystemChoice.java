@@ -56,14 +56,14 @@ import java.util.Optional;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
- * Class encapsulating the four different types of file system choices.
+ * Class encapsulating the five different types of file system choices.
  *
  * @author Julian Bunzel, KNIME GmbH, Berlin, Germany
  */
 public class FileSystemChoice {
 
     /**
-     * Enum stating the four different types of file system choices.
+     * Enum stating the five different types of file system choices.
      *
      * @author Julian Bunzel, KNIME GmbH, Berlin, Germany
      */
@@ -139,7 +139,7 @@ public class FileSystemChoice {
 
     @Override
     public final String toString() {
-        // Overriding. Showing the identifer, since this is what we want to see in dialog components...
+        // Overriding. Showing the identifier, since this is what we want to see in dialog components...
         return getId();
     }
 

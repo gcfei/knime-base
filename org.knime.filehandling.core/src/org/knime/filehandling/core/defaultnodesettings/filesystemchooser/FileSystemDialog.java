@@ -63,9 +63,9 @@ interface FileSystemDialog {
 
     boolean hasSpecifierComponent();
 
-    FileSystemInfo getFileSystemInfo();
+    FSSpec getFSSpec();
 
-    void update(FileSystemInfo fileSystemInfo);
+    void update(FSSpec fileSystemInfo);
 
     void addSpecifierChangeListener(ChangeListener listener);
 
