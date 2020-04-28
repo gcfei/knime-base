@@ -138,6 +138,10 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
 
     private final JSpinner m_limitAnalysisSpinner;
 
+    private final JSpinner m_maxColsSpinner;
+
+    private final JSpinner m_maxCharsColumnSpinner;
+
     private final CharsetNamePanel m_encodingPanel;
 
     private final MultiTableReadConfig<CSVTableReaderConfig> m_config;
@@ -164,6 +168,12 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         Long rowEnd = Long.valueOf(Long.MAX_VALUE);
         Long skipOne = Long.valueOf(1);
         Long initLimit = Long.valueOf(50);
+
+        //TODO
+        Integer value = Integer.valueOf(50);
+        Integer min = Integer.valueOf(0);
+        Integer max = Integer.valueOf(Integer.MAX_VALUE);
+        Integer step = Integer.valueOf(1);
 
         m_colDelimiterField = new JTextField("###", textWidth);
         m_rowDelimiterField = new JTextField("###", textWidth);
@@ -196,6 +206,9 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_limitAnalysisSpinner = new JSpinner(new SpinnerNumberModel(initLimit, rowStart, rowEnd, initLimit));
         m_limitAnalysisChecker.addChangeListener(e -> controlSpinner(m_limitAnalysisChecker, m_limitAnalysisSpinner));
         m_limitAnalysisChecker.doClick();
+        //TODO
+        m_maxColsSpinner = new JSpinner(new SpinnerNumberModel(value, min, max, step));
+        m_maxCharsColumnSpinner = new JSpinner(new SpinnerNumberModel(value, min, max, step));
 
         addTab("Options", initLayout());
         addTab("Limit Rows", getLimitRowsPanel());
@@ -312,6 +325,14 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy += 1;
         optionsPanel.add(m_replaceQuotedEmptyStringChecker, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionsPanel.add(m_maxColsSpinner, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionsPanel.add(m_maxCharsColumnSpinner, gbc);
 
         //empty panel to eat up extra space
         gbc.gridy += 1;
@@ -441,6 +462,9 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         csvReaderConfig.setSkipLines(m_skipFirstLinesChecker.isSelected());
         csvReaderConfig.setNumLinesToSkip((Long)m_skipFirstLinesSpinner.getValue());
 
+        csvReaderConfig.setMaxColumns((Integer)m_maxColsSpinner.getValue());
+        csvReaderConfig.setMaxCharsPerColumn((Integer)m_maxCharsColumnSpinner.getValue());
+
         csvReaderConfig.setSkipEmptyLines(m_skipEmptyLinesChecker.isSelected());
         csvReaderConfig.setReplaceEmptyWithMissing(m_replaceQuotedEmptyStringChecker.isSelected());
 
@@ -496,6 +520,9 @@ final class CSVTableReaderNodeDialog extends NodeDialogPane {
         m_quoteField.setText(EscapeUtils.escape(csvReaderConfig.getQuote()));
         m_quoteEscapeField.setText(EscapeUtils.escape(csvReaderConfig.getQuoteEscape()));
         m_commentStartField.setText(EscapeUtils.escape(csvReaderConfig.getComment()));
+        //TODO
+        m_maxColsSpinner.setValue(csvReaderConfig.getMaxColumns());
+        m_maxCharsColumnSpinner.setValue(csvReaderConfig.getMaxCharsPerColumn());
 
         m_skipFirstLinesChecker.setSelected(csvReaderConfig.skipLines());
         m_skipFirstLinesChecker.setSelected(csvReaderConfig.skipLines());

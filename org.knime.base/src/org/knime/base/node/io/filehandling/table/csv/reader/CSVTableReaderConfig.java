@@ -70,12 +70,12 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
      * According to the javadoc a value of -1 allows for auto-expansion of the array which indicates that this value
      * defines the size of the buffer array hence setting a very large value might cause memory problems
      */
-    private static final int DEFAULT_MAX_CHARS_PER_COLUMN = -1;
+//    private static final int DEFAULT_MAX_CHARS_PER_COLUMN = -1;
 
     /**
      * The default maximum number of columns, used to instantiate an array in univocity.
      */
-    private static final int DEFAULT_MAX_COLUMNS = 10000;
+//    private static final int DEFAULT_MAX_COLUMNS = 10000;
 
     /** string key used to save the value of column delimiter used to read csv files */
     private static final String CFG_DELIMITER = "column_delimiter";
@@ -107,6 +107,13 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
     /** string key used to save the character set name (encoding) */
     private static final String CFG_CHAR_SET_NAME = "character_set_name";
 
+    //TODO desc
+    /** */
+    private static final String CFG_MAX_COLUMNS = "max_columns";
+
+    /** */
+    private static final String CFG_MAX_CHARS_COLUMN = "max_chars_column";
+
     /** Setting used to parse csv files */
     private final CsvParserSettings m_settings;
 
@@ -119,6 +126,13 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
     /** Setting used to store the character set name (encoding) */
     private String m_charSet = null;
 
+    //TODO desc
+    /** Setting used to set the maximum number of allowed rows. */
+    private int m_maxColumns = 10000;
+
+    /** Setting used to set the maximum number of allowed characters in a column. */
+    private int m_maxCharsPerColumn = 10000;
+
     /**
      * Constructor.
      */
@@ -126,8 +140,8 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         m_settings = new CsvParserSettings();
         m_settings.setEmptyValue("");
         m_settings.setSkipEmptyLines(false);
-        m_settings.setMaxCharsPerColumn(DEFAULT_MAX_CHARS_PER_COLUMN);
-        m_settings.setMaxColumns(DEFAULT_MAX_COLUMNS);
+        m_settings.setMaxCharsPerColumn(m_maxCharsPerColumn);
+        m_settings.setMaxColumns(m_maxColumns);
     }
 
     /**
@@ -328,6 +342,47 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         m_charSet = charSet;
     }
 
+    //TODO change default value and the desc of the new methods
+    /**
+     * Returns the hard limit of how many columns a row can have (defaults to 512).
+     *
+     * @return The maximum number of columns a row can have
+     */
+    public int getMaxColumns() {
+        return getSettings().getMaxColumns();
+    }
+
+    /**
+     * Defines a hard limit of how many columns a record can have (defaults to 512).
+     * You need this to avoid OutOfMemory errors in case of inputs that might be inconsistent with the format you are dealing with.
+     *
+     * @param maxColumns The maximum number of columns a record can have.
+     */
+    public void setMaxColumns(final int maxColumns) {
+        getSettings().setMaxColumns(maxColumns);
+    }
+
+    //TODO change desc
+    /**
+     * The maximum number of characters allowed for any given value being written/read. Used to avoid OutOfMemoryErrors (defaults to 4096).
+     *
+     * @return The maximum number of characters allowed for any given value being written/read.
+     */
+    public int getMaxCharsPerColumn() {
+        return getSettings().getMaxCharsPerColumn();
+    }
+
+    /**
+     * Defines the maximum number of characters allowed for any given value being written/read. Used to avoid OutOfMemoryErrors (defaults to 4096).
+     *
+     * <p>To enable auto-expansion of the internal array, set this property to -1</p>
+     *
+     * @param maxCharsPerColumn The maximum number of characters allowed for any given value being written/read
+     */
+    public void setMaxCharsPerColumn(final int maxCharsPerColumn) {
+        getSettings().setMaxCharsPerColumn(maxCharsPerColumn);
+    }
+
     @Override
     public void loadInDialog(final NodeSettingsRO settings) {
         setDelimiter(settings.getString(CFG_DELIMITER, ","));
@@ -344,6 +399,12 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         setReplaceEmptyWithMissing(settings.getBoolean(CFG_REPLACE_EMPTY_WITH_MISSING, false));
 
         setCharSetName(settings.getString(CFG_CHAR_SET_NAME, null));
+
+        //TODO  default value direkt hier rein?
+        setMaxColumns(settings.getInt(CFG_MAX_COLUMNS, 10000));
+
+      //TODO  default value direkt hier rein?
+        setMaxCharsPerColumn(settings.getInt(CFG_MAX_CHARS_COLUMN, 10000));
     }
 
     @Override
@@ -363,6 +424,9 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         setReplaceEmptyWithMissing(settings.getBoolean(CFG_REPLACE_EMPTY_WITH_MISSING));
 
         setCharSetName(settings.getString(CFG_CHAR_SET_NAME));
+
+        setMaxColumns(settings.getInt(CFG_MAX_COLUMNS));
+        setMaxCharsPerColumn(settings.getInt(CFG_MAX_CHARS_COLUMN));
     }
 
     @Override
@@ -382,6 +446,8 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
 
         settings.getString(CFG_CHAR_SET_NAME);
 
+        settings.getInt(CFG_MAX_COLUMNS);
+        settings.getInt(CFG_MAX_CHARS_COLUMN);
     }
 
     @Override
@@ -400,6 +466,9 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         settings.addBoolean(CFG_REPLACE_EMPTY_WITH_MISSING, replaceEmptyWithMissing());
 
         settings.addString(CFG_CHAR_SET_NAME, getCharSetName());
+
+        settings.addInt(CFG_MAX_COLUMNS, getMaxColumns());
+        settings.addInt(CFG_MAX_CHARS_COLUMN, getMaxCharsPerColumn());
     }
 
     @Override
@@ -420,6 +489,9 @@ public final class CSVTableReaderConfig implements ReaderSpecificConfig<CSVTable
         configCopy.setReplaceEmptyWithMissing(this.replaceEmptyWithMissing());
 
         configCopy.setCharSetName(this.getCharSetName());
+
+        configCopy.setMaxColumns(this.getMaxColumns());
+        configCopy.setMaxCharsPerColumn(this.getMaxCharsPerColumn());
 
         return configCopy;
     }
