@@ -91,6 +91,8 @@ public class UngroupOperation2 {
 
     private final boolean m_skipMissingValues;
 
+    private final boolean m_skipEmptyCollections;
+
     private final boolean m_removeCollectionCol;
 
     private final boolean m_enableHilite;
@@ -109,10 +111,25 @@ public class UngroupOperation2 {
      */
     public UngroupOperation2(final boolean enableHilite, final boolean skipMissingValues,
         final boolean removeCollectionCol, final int[] colIndices) throws InvalidSettingsException {
+        this(enableHilite, skipMissingValues, false, removeCollectionCol, colIndices);
+    }
+
+    //TODO desc
+    /**
+     * @param enableHilite
+     * @param skipMissingValues
+     * @param skipEmptyCollections
+     * @param removeCollectionCol
+     * @param colIndices
+     * @since 4.2
+     */
+    public UngroupOperation2(final boolean enableHilite, final boolean skipMissingValues, final boolean skipEmptyCollections,
+        final boolean removeCollectionCol, final int[] colIndices) {
         m_colIndices = colIndices;
         m_enableHilite = enableHilite;
         m_skipMissingValues = skipMissingValues;
         m_removeCollectionCol = removeCollectionCol;
+        m_skipEmptyCollections = skipEmptyCollections;
     }
 
     /**
@@ -241,6 +258,9 @@ public class UngroupOperation2 {
                         allMissing = false;
                     }
                     newCells[i] = newCell;
+                }
+                if(allEmpty && m_skipEmptyCollections) {
+                    continue;
                 }
                 if (!allEmpty && !continueLoop) {
                     break;

@@ -100,6 +100,8 @@ public class UngroupNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_skipMissingVal = createSkipMissingValModel();
 
+    private final SettingsModelBoolean m_skipEmptyCollections = createSkipEmptyCollectionsModel();
+
     private final SettingsModelBoolean m_enableHilite = createEnableHiliteModel();
 
     /**
@@ -137,6 +139,13 @@ public class UngroupNodeModel extends NodeModel {
      */
     static SettingsModelBoolean createSkipMissingValModel() {
         return new SettingsModelBoolean("skipMissingValues", false);
+    }
+
+    /**
+     * @return the ignore missing value model
+     */
+    static SettingsModelBoolean createSkipEmptyCollectionsModel() {
+        return new SettingsModelBoolean("skipMissingCollections", false);
     }
 
     /**
@@ -188,7 +197,7 @@ public class UngroupNodeModel extends NodeModel {
     private UngroupOperation2 createUngroupOperation(final DataTableSpec spec, final int[] colIndices)
         throws InvalidSettingsException {
         return new UngroupOperation2(m_enableHilite.getBooleanValue(), m_skipMissingVal.getBooleanValue(),
-            m_removeCollectionCol.getBooleanValue(), colIndices);
+            m_skipEmptyCollections.getBooleanValue(), m_removeCollectionCol.getBooleanValue(), colIndices);
     }
 
     /**
@@ -300,6 +309,9 @@ public class UngroupNodeModel extends NodeModel {
             //this option has been introduced in KNIME 2.8
             m_collCols.validateSettings(settings);
         }
+
+        //TODO check for backwards compatability
+        m_skipEmptyCollections.validateSettings(settings);
     }
 
     /**
@@ -319,6 +331,9 @@ public class UngroupNodeModel extends NodeModel {
             //load and use the old settings
             m_columnName.loadSettingsFrom(settings);
         }
+
+        //TODO check for backwards compatability
+        m_skipEmptyCollections.loadSettingsFrom(settings);
     }
 
     /**
@@ -330,6 +345,8 @@ public class UngroupNodeModel extends NodeModel {
         m_skipMissingVal.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_collCols.saveSettingsTo(settings);
+//        TODO check for backwards compatability
+        m_skipEmptyCollections.saveSettingsTo(settings);
     }
 
     /**

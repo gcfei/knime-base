@@ -24,7 +24,13 @@
        <option name="Remove selected collection column">
             The selected collection column will be removed from the result
             table, if this option is ticked.
-       </option><option name="Skip missing values">
+       </option>
+       <option name="Skip missing values">
+            If enabled, rows with a missing value in all selected collection columns are
+            skipped, as well as missing values in a collection cell if they occur in all
+            selected collection columns.
+       </option>
+		<option name="Skip empty collections">
             If enabled, rows with a missing value in all selected collection columns are
             skipped, as well as missing values in a collection cell if they occur in all
             selected collection columns.
