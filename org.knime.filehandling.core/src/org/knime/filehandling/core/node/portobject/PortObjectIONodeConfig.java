@@ -55,7 +55,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.FileUtil;
 import org.knime.filehandling.core.defaultnodesettings.SettingsModelFileChooser2;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterOption;
+import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
 import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeSettingsModel;
 import org.knime.filehandling.core.node.portobject.writer.PortObjectWriterNodeConfig;
 
@@ -80,7 +80,7 @@ public abstract class PortObjectIONodeConfig {
     private final SettingsModelIntegerBounded m_timeoutModel = new SettingsModelIntegerBounded(CFG_CONNECTION_TIMEOUT,
         FileUtil.getDefaultURLTimeoutMillis(), 0, Integer.MAX_VALUE);
 
-    private FilterModeSettingsModel m_s = new FilterModeSettingsModel("asd", FilterOption.FILE);
+    private FilterModeSettingsModel m_s = new FilterModeSettingsModel("asd", FilterMode.FILE);
 
     /**
      * Constructor for configs in which the file chooser doesn't filter on file suffixes.

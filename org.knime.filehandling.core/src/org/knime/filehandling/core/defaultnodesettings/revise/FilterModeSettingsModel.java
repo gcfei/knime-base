@@ -54,88 +54,79 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterOption;
+import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
 
 /**
  *
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  */
-public class FilterModeSettingsModel extends SettingsModel {
+public final class FilterModeSettingsModel extends SettingsModel {
 
-    private static final String MODEL_TYPE_ID = "SMID_FSLocation";
+    private static final String MODEL_TYPE_ID = "SMID_FilterMode";
 
-    private static final String CFG_FILTER_OTPION = "filter_selection";
+    private static final String CFG_FILTER_MODE = "filter_mode";
 
     private static final String CFG_INCLUDE_SUBFOLDERS = "include_subfolders";
 
-    private static final String CFG_FILTER_CONFIG = "filter_config";
+    private static final String CFG_FILTER_OPTIONS = "filter_options";
 
     private static final boolean DEFAULT_INCLUDE_SUBFOLDERS = false;
 
     private final String m_configName;
 
-    private FilterOption m_filterOption;
+    private FilterMode m_filterMode;
 
     private boolean m_includeSubfolders = DEFAULT_INCLUDE_SUBFOLDERS;
 
-    private FilterDialogSettings m_filterConfigSettings = new FilterDialogSettings();
+    private FilterOptionsSettings m_filterOptionsSettings = new FilterOptionsSettings();
 
     /**
+     * Constructor.
      *
+     * @param configName the config name
+     * @param defaultFilterMode the default {@link FilterMode}
      */
-    public FilterModeSettingsModel(final String configName, final FilterOption defaultSelectionMode) {
+    public FilterModeSettingsModel(final String configName, final FilterMode defaultFilterMode) {
         m_configName = configName;
-        m_filterOption = defaultSelectionMode;
+        m_filterMode = defaultFilterMode;
     }
 
     private FilterModeSettingsModel(final FilterModeSettingsModel toCopy) {
         m_configName = toCopy.m_configName;
-        m_filterOption = toCopy.m_filterOption;
+        m_filterMode = toCopy.m_filterMode;
         m_includeSubfolders = toCopy.m_includeSubfolders;
-        m_filterConfigSettings = toCopy.m_filterConfigSettings;
+        m_filterOptionsSettings = toCopy.m_filterOptionsSettings;
     }
 
     /**
-     * @return the filterOption
+     * @return the filterMode
      */
-    public FilterOption getFilterOption() {
-        return m_filterOption;
+    public FilterMode getFilterMode() {
+        return m_filterMode;
     }
 
     /**
-     * @param filterOption the filterOption to set
+     * @param filterMode the filterMode to set
      */
-    public void setFilterOption(final FilterOption filterOption) {
-        m_filterOption = filterOption;
+    public void setFilterMode(final FilterMode filterMode) {
+        m_filterMode = filterMode;
         notifyChangeListeners();
     }
 
     /**
-     * @return the filterConfigSettings
+     * @return the filterOptionsSettings
      */
-    public FilterDialogSettings getFilterConfigSettings() {
-        return m_filterConfigSettings;
+    public FilterOptionsSettings getFilterOptionsSettings() {
+        return m_filterOptionsSettings;
     }
 
     /**
-     * @param filterConfigSettings the filterConfigSettings to set
+     * @param filterOptionsSettings the filterOptionsSettings to set
      */
-    public void setFilterConfigSettings(final FilterDialogSettings filterConfigSettings) {
-        m_filterConfigSettings = filterConfigSettings;
+    public void setFilterConfigSettings(final FilterOptionsSettings filterOptionsSettings) {
+        m_filterOptionsSettings = filterOptionsSettings;
         notifyChangeListeners();
     }
-
-    //    public void saveSettingsTo(final Config config) throws InvalidSettingsException {
-    //        config.addString(CFG_FILTER_OTPION, m_filterOption.name());
-    //        config.addBoolean(CFG_INCLUDE_SUBFOLDERS, m_includeSubfolders);
-    //        m_filterConfigSettings.saveToConfig(config.addConfig(CFG_FILTER_CONFIG));
-    //    }
-    //
-    //    public void loadSettingsFrom(final Config config) throws InvalidSettingsException {
-    //        m_filterOption = FilterOption.valueOf(config.getString(CFG_FILTER_OTPION));
-    //        m_includeSubfolders = config.getBoolean(CFG_INCLUDE_SUBFOLDERS);
-    //        m_filterConfigSettings.loadFromConfig(config.getConfig(CFG_FILTER_CONFIG));
-    //    }
 
     /**
      * @return the includeSubfolders
@@ -158,78 +149,54 @@ public class FilterModeSettingsModel extends SettingsModel {
         return new FilterModeSettingsModel(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected String getModelTypeID() {
         return MODEL_TYPE_ID;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected String getConfigName() {
         return m_configName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        m_filterOption = FilterOption.valueOf(settings.getString(CFG_FILTER_OTPION, m_filterOption.name()));
+        m_filterMode = FilterMode.valueOf(settings.getString(CFG_FILTER_MODE, m_filterMode.name()));
         m_includeSubfolders = settings.getBoolean(CFG_INCLUDE_SUBFOLDERS, DEFAULT_INCLUDE_SUBFOLDERS);
         try {
-            m_filterConfigSettings.loadFromConfigForDialog(settings.getConfig(CFG_FILTER_CONFIG));
+            m_filterOptionsSettings.loadFromConfigForDialog(settings.getConfig(CFG_FILTER_OPTIONS));
         } catch (InvalidSettingsException ex) {
             // nothing to do
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsForDialog(final NodeSettingsWO settings) throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        FilterOption.valueOf(settings.getString(CFG_FILTER_OTPION));
+        FilterMode.valueOf(settings.getString(CFG_FILTER_MODE));
         settings.getBoolean(CFG_INCLUDE_SUBFOLDERS);
-        m_filterConfigSettings.validate(settings.getConfig(CFG_FILTER_CONFIG));
+        FilterOptionsSettings.validate(settings.getConfig(CFG_FILTER_OPTIONS));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_filterOption = FilterOption.valueOf(settings.getString(CFG_FILTER_OTPION));
+        m_filterMode = FilterMode.valueOf(settings.getString(CFG_FILTER_MODE));
         m_includeSubfolders = settings.getBoolean(CFG_INCLUDE_SUBFOLDERS);
-        m_filterConfigSettings.loadFromConfigForModel(settings.getConfig(CFG_FILTER_CONFIG));
+        m_filterOptionsSettings.loadFromConfigForModel(settings.getConfig(CFG_FILTER_OPTIONS));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        settings.addString(CFG_FILTER_OTPION, m_filterOption.name());
+        settings.addString(CFG_FILTER_MODE, m_filterMode.name());
         settings.addBoolean(CFG_INCLUDE_SUBFOLDERS, m_includeSubfolders);
-        m_filterConfigSettings.saveToConfig(settings.addConfig(CFG_FILTER_CONFIG));
+        m_filterOptionsSettings.saveToConfig(settings.addConfig(CFG_FILTER_OPTIONS));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";

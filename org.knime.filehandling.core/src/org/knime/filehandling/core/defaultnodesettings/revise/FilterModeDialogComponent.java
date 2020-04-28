@@ -54,11 +54,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
@@ -73,76 +76,66 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  */
 public final class FilterModeDialogComponent extends DialogComponent {
 
-    /** String used as button label */
-    private static final String CONFIGURE_BUTTON_LABEL = "Filter options";
+    /** Panel containing filtering options */
+    private final FilterOptionsPanel m_filterDialogPanel = new FilterOptionsPanel();
 
-    /** String used as label for the include sub folders check box */
-    private static final String INCLUDE_SUBFOLDERS_LABEL = "Include subfolders";
+    /** Button to open the dialog that contains options for file filtering */
+    private final JButton m_filterOptionsButton = new JButton("Filter options");
+
+    private final JCheckBox m_includeSubfoldersCheckBox = new JCheckBox("Include subfolders");
 
     private final DialogComponentButtonGroup m_filterModeButtonGroup;
 
-    /** Button to open the dialog that contains options for file filtering */
-    private final JButton m_configureFilterButton;
-
-    private final JCheckBox m_includeSubfoldersCheckBox;
-
-    /** Panel containing options for file filtering */
-    private final FilterDialogPanel m_filterDialogPanel;
+    private final SettingsModelString m_filterModeSettingsModel;
 
     private final JPanel m_filterModePanel;
 
     private final JPanel m_filterPanel;
 
+    private final FilterMode[] m_filterModes;
+
     /**
-     * @param model
+     * @param model the settings model
+     * @param filterModes filter modes that will be available and be arranged according the order (first one is
+     *            leftmost)
+     *
+     * @throws IllegalArgumentException if the list of filter modes contains duplicates
      */
-    public FilterModeDialogComponent(final FilterModeSettingsModel model) {
+    public FilterModeDialogComponent(final FilterModeSettingsModel model, final FilterMode... filterModes) {
         super(model);
-        final SettingsModelString filterModeModel =
-            new SettingsModelString("a", ((FilterModeSettingsModel)getModel()).getFilterOption().name()); // TODO
-        m_filterModeButtonGroup = new DialogComponentButtonGroup(filterModeModel, null, false, FilterOption.values());
-        m_configureFilterButton = new JButton(CONFIGURE_BUTTON_LABEL);
-        m_includeSubfoldersCheckBox = new JCheckBox(INCLUDE_SUBFOLDERS_LABEL);
-        m_configureFilterButton.addActionListener(e -> showFileFilterConfigurationDialog());
-        m_filterDialogPanel = new FilterDialogPanel();
+        m_filterModes = filterModes;
+        // does not need a meaningful config name since it will never be saved
+        m_filterModeSettingsModel = new SettingsModelString("dummy", model.getFilterMode().name());
+        m_filterModeButtonGroup = new DialogComponentButtonGroup(m_filterModeSettingsModel, null, false, filterModes);
+        m_filterOptionsButton.addActionListener(e -> showFileFilterConfigurationDialog());
 
         m_filterModePanel = createFilterModePanel();
         m_filterPanel = createFilterPanel();
 
-        filterModeModel
-            .addChangeListener(l -> model.setFilterOption(FilterOption.valueOf(filterModeModel.getStringValue())));
+        m_filterModeSettingsModel.addChangeListener(l -> {
+            final FilterMode filterMode = FilterMode.valueOf(m_filterModeSettingsModel.getStringValue());
+            m_filterDialogPanel.visibleComponents(filterMode);
+            model.setFilterMode(filterMode);
+        });
         m_includeSubfoldersCheckBox
-            .addChangeListener(l -> model.setIncludeSubfolders(m_includeSubfoldersCheckBox.isSelected()));
+            .addActionListener(l -> model.setIncludeSubfolders(m_includeSubfoldersCheckBox.isSelected()));
 
         initComponent();
-        // TODO settings stuff
-        // TODO implement filter
     }
 
     private void initComponent() {
         getComponentPanel().setLayout(new GridBagLayout());
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 0, 5, 0);
+        final GridBagConstraints gbc = createAndInitGBC();
         gbc.weightx = 1;
         getComponentPanel().add(m_filterModePanel, gbc);
-        gbc.weighty = 1;
         gbc.gridy++;
+        gbc.weighty = 1;
         getComponentPanel().add(m_filterPanel, gbc);
     }
 
     private JPanel createFilterModePanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
-        final GridBagConstraints gbc = new GridBagConstraints(0, 0, 1, 1, 0, 1, GridBagConstraints.NORTHWEST,
-            GridBagConstraints.NONE, new Insets(5, 0, 5, 0), 0, 0);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(5, 0, 5, 0);
+        final GridBagConstraints gbc = createAndInitGBC();
         gbc.weightx = 1;
         gbc.weighty = 1;
         panel.add(m_filterModeButtonGroup.getComponentPanel(), gbc);
@@ -151,37 +144,89 @@ public final class FilterModeDialogComponent extends DialogComponent {
 
     private JPanel createFilterPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 0, 5, 0);
-        panel.add(m_configureFilterButton, gbc);
-
+        final GridBagConstraints gbc = createAndInitGBC();
+        panel.add(m_filterOptionsButton, gbc);
         gbc.gridx++;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(0, 5, 0, 0);
+        gbc.weightx = 1;
+        gbc.weighty = 1;
         panel.add(m_includeSubfoldersCheckBox, gbc);
         return panel;
     }
 
+    private static GridBagConstraints createAndInitGBC() {
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        return gbc;
+    }
+
     /**
-     * @return the selectionModePanel
+     * Enables or disables the specified filter mode button. If the selected button is disabled, the first enabled
+     * button starting from left will be selected instead. Returns the selected {@link FilterMode} after
+     * enabling/disabling.
+     *
+     * @param filterMode the filter mode of the button to enable or disable
+     * @param enabled if the button should be enabled or not
+     * @return the selected filter mode after the call of this function
+     */
+    public FilterMode setEnabledFilterModeButton(final FilterMode filterMode, final boolean enabled) {
+        if (!ArrayUtils.contains(m_filterModes, filterMode)) {
+            return FilterMode.valueOf(m_filterModeSettingsModel.getStringValue());
+        }
+        final JRadioButton button = (JRadioButton)m_filterModeButtonGroup.getButton(filterMode.name());
+
+        // if the button should be disabled and was the selected one, select a different one
+        if (!enabled && button.isEnabled() && button.isSelected()) {
+            for (final FilterMode fm : m_filterModes) {
+                if (fm == filterMode) {
+                    continue;
+                }
+                final AbstractButton buttonToSelect = m_filterModeButtonGroup.getButton(fm.name());
+                // select the button only if it is not disabled
+                if (buttonToSelect.isEnabled()) {
+                    // button will be selected when we update the settings model
+                    m_filterModeSettingsModel.setStringValue(fm.name());
+                    button.setEnabled(false);
+                    return fm;
+                }
+            }
+        }
+        button.setEnabled(enabled);
+        return FilterMode.valueOf(m_filterModeSettingsModel.getStringValue());
+    }
+
+    /**
+     * Returns if the specified filter mode button is enabled.
+     *
+     * @param filterMode the filter mode of the button to check
+     * @return <code>true</code> if the button is enabled, otherwise <code>false</code>
+     */
+    public boolean isFilterModeEnabled(final FilterMode filterMode) {
+        return m_filterModeButtonGroup.getButton(filterMode.name()).isEnabled();
+    }
+
+    /**
+     * Returns the panel that contains the button group for selecting the filter mode.
+     *
+     * @return the panel containing filter mode button group
      */
     public JPanel getSelectionModePanel() {
         return m_filterModePanel;
     }
 
     /**
-     * @return the filterConfigPanel
+     * Returns the panel that contains the the button to open the dialog with filter options and the check box that
+     * enables/disables subfolders inclusion.
+     *
+     * @return the panel containing filter options button and include subfolders check box
      */
     public JPanel getFilterConfigPanel() {
         return m_filterPanel;
     }
 
-    /** Method called if file filter configuration button is clicked */
+    /** Method called if filter options button is clicked */
     private void showFileFilterConfigurationDialog() {
 
         final Container c = getComponentPanel().getParent();
@@ -195,28 +240,41 @@ public final class FilterModeDialogComponent extends DialogComponent {
             parent = parent.getParent();
         }
 
-        final FilterDialog filterDialog = new FilterDialog(parentFrame, m_filterDialogPanel);
+        final FilterOptionsDialog filterDialog = new FilterOptionsDialog(parentFrame, m_filterDialogPanel);
         filterDialog.setLocationRelativeTo(c); // TODO
         filterDialog.setVisible(true);
 
         if (filterDialog.getResultStatus() == JOptionPane.OK_OPTION) {
-            // updates the settings model
+            // update the settings model
             ((FilterModeSettingsModel)getModel())
                 .setFilterConfigSettings(m_filterDialogPanel.getFilterConfigSettings());
         } else {
-            // overwrites the values in the file filter panel components with the save ones
+            // overwrite the values in the filter options panel with the saved ones
             m_filterDialogPanel
-                .setFilterConfigSettings(((FilterModeSettingsModel)getModel()).getFilterConfigSettings());
+                .setFilterConfigSettings(((FilterModeSettingsModel)getModel()).getFilterOptionsSettings());
         }
     }
 
-    public enum FilterOption implements ButtonGroupEnumInterface {
-            FILE("File"), FOLDER("Folder"), FILES_IN_FOLDERS("Files in folders"), FOLDERS("Folders"),
+    /**
+     * Enumeration of modes for file and folder filtering.
+     *
+     * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
+     */
+    public enum FilterMode implements ButtonGroupEnumInterface {
+            /** Only one file */
+            FILE("File"),
+            /** Only one folder */
+            FOLDER("Folder"),
+            /** Several files in a folder */
+            FILES_IN_FOLDERS("Files in folder"),
+            /** Multiple folders */
+            FOLDERS("Folders"),
+            /** Multiple files and folders */
             FILES_AND_FOLDERS("Files and folders");
 
         private final String m_label;
 
-        private FilterOption(final String label) {
+        private FilterMode(final String label) {
             m_label = label;
         }
 
@@ -244,31 +302,20 @@ public final class FilterModeDialogComponent extends DialogComponent {
     @Override
     protected void updateComponent() {
         final FilterModeSettingsModel model = (FilterModeSettingsModel)getModel();
-        final SettingsModelString filterModeModel = (SettingsModelString)m_filterModeButtonGroup.getModel();
-        filterModeModel.setStringValue(model.getFilterOption().name());
+        m_filterModeSettingsModel.setStringValue(model.getFilterMode().name());
         m_includeSubfoldersCheckBox.setSelected(model.isIncludeSubfolders());
-        m_filterDialogPanel.setFilterConfigSettings(model.getFilterConfigSettings());
-        m_filterDialogPanel.visibleComponents(FilterOption.valueOf(filterModeModel.getStringValue()));
+        m_filterDialogPanel.setFilterConfigSettings(model.getFilterOptionsSettings());
+        m_filterDialogPanel.visibleComponents(FilterMode.valueOf(m_filterModeSettingsModel.getStringValue()));
         setEnabledComponents(model.isEnabled());
     }
-    //
-    //    private void updateModel() {
-    //        final FilterModeSettingsModel model = (FilterModeSettingsModel)getModel();
-    //        final SettingsModelString filterModeModel = (SettingsModelString)m_filterModeButtonGroup.getModel();
-    //        model.setFilterOption(FilterOption.valueOf(filterModeModel.getStringValue()));
-    //        model.setFilterConfigSettings(m_filterDialogPanel.getFilterConfigSettings());
-    //        model.notifyListeners();
-    //    }
 
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-        // TODO
         // nothing to do
     }
 
     @Override
     protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs) throws NotConfigurableException {
-        // TODO
         // nothing to do
     }
 
@@ -276,13 +323,12 @@ public final class FilterModeDialogComponent extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         m_filterModePanel.setEnabled(enabled); // TODO does panel disable its components?
         m_filterModeButtonGroup.getModel().setEnabled(enabled);
-        m_configureFilterButton.setEnabled(enabled);
+        m_filterOptionsButton.setEnabled(enabled);
         m_includeSubfoldersCheckBox.setEnabled(enabled);
     }
 
     @Override
     public void setToolTipText(final String text) {
-        // TODO Auto-generated method stub
-
+        // nothing to do
     }
 }

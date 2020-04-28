@@ -50,16 +50,15 @@ package org.knime.filehandling.core.defaultnodesettings.revise;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
-import org.knime.filehandling.core.filefilter.FileFilter.FilterType;
-import org.knime.filehandling.core.filefilter.FileFilterPanel;
+import org.knime.filehandling.core.defaultnodesettings.revise.FileAndFolderFilter.FilterType;
 
 /**
- * This class stores the data from the {@link FileFilterPanel}. TODO
+ * This class stores the data from the {@link FilterOptionsPanel}.
  *
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  * @author Mareike Hoeger, KNIME GmbH, Konstanz, Germany
  */
-class FilterDialogSettings {
+final class FilterOptionsSettings {
 
     /** Configuration key for the option to filter files by extension in selected folder. */
     private static final String CFG_FILES_FILTER_BY_EXTENSION = "files_filter_extension";
@@ -214,12 +213,11 @@ class FilterDialogSettings {
     /**
      * Default constructor for filter settings.
      */
-    public FilterDialogSettings() {
+    FilterOptionsSettings() {
         this(new String[0]);
     }
 
-    private FilterDialogSettings(final boolean filterFilesByExtension,
-        final String filesExtensionExpression) {
+    private FilterOptionsSettings(final boolean filterFilesByExtension, final String filesExtensionExpression) {
         m_filterHiddenFiles = true;
         m_filterFilesByExtension = filterFilesByExtension;
         m_filterFilesByName = false;
@@ -244,7 +242,7 @@ class FilterDialogSettings {
      *
      * @param fileSuffixes possibly empty array for file suffixes that should be filtered
      */
-    public FilterDialogSettings(final String[] fileSuffixes) {
+    FilterOptionsSettings(final String[] fileSuffixes) {
         this(fileSuffixes.length > 0,
             fileSuffixes.length > 0 ? String.join(";", fileSuffixes) : DEFAULT_FILTER_EXPRESSION);
     }
@@ -252,84 +250,84 @@ class FilterDialogSettings {
     /**
      * @return the filterHiddenFiles
      */
-    public boolean isFilterHiddenFiles() {
+    boolean isFilterHiddenFiles() {
         return m_filterHiddenFiles;
     }
 
     /**
      * @param filterHiddenFiles the filterHiddenFiles to set
      */
-    public void setFilterHiddenFiles(final boolean filterHiddenFiles) {
+    void setFilterHiddenFiles(final boolean filterHiddenFiles) {
         m_filterHiddenFiles = filterHiddenFiles;
     }
 
     /**
      * @return the filterFilesByExtension
      */
-    public boolean isFilterFilesByExtension() {
+    boolean isFilterFilesByExtension() {
         return m_filterFilesByExtension;
     }
 
     /**
      * @param filterFilesByExtension the filterFilesByExtension to set
      */
-    public void setFilterFilesByExtension(final boolean filterFilesByExtension) {
+    void setFilterFilesByExtension(final boolean filterFilesByExtension) {
         m_filterFilesByExtension = filterFilesByExtension;
     }
 
     /**
      * @return the filesExtensionExpression
      */
-    public String getFilesExtensionExpression() {
+    String getFilesExtensionExpression() {
         return m_filesExtensionExpression;
     }
 
     /**
      * @param filesExtensionExpression the filesExtensionExpression to set
      */
-    public void setFilesExtensionExpression(final String filesExtensionExpression) {
+    void setFilesExtensionExpression(final String filesExtensionExpression) {
         m_filesExtensionExpression = filesExtensionExpression;
     }
 
     /**
      * @return the filesExtensionCaseSensitive
      */
-    public boolean isFilesExtensionCaseSensitive() {
+    boolean isFilesExtensionCaseSensitive() {
         return m_filesExtensionCaseSensitive;
     }
 
     /**
      * @param filesExtensionCaseSensitive the filesExtensionCaseSensitive to set
      */
-    public void setFilesExtensionCaseSensitive(final boolean filesExtensionCaseSensitive) {
+    void setFilesExtensionCaseSensitive(final boolean filesExtensionCaseSensitive) {
         m_filesExtensionCaseSensitive = filesExtensionCaseSensitive;
     }
 
     /**
      * @return the filterFilesByName
      */
-    public boolean isFilterFilesByName() {
+    boolean isFilterFilesByName() {
         return m_filterFilesByName;
     }
 
     /**
      * @param filterFilesByName the filterFilesByName to set
      */
-    public void setFilterFilesByName(final boolean filterFilesByName) {
+    void setFilterFilesByName(final boolean filterFilesByName) {
         m_filterFilesByName = filterFilesByName;
     }
 
     /**
      * @return the filesNameExpression
      */
-    public String getFilesNameExpression() {
+    String getFilesNameExpression() {
         return m_filesNameExpression;
     }
 
     /**
      * @param filesNameExpression the filesNameExpression to set
      */
-    public void setFilesNameExpression(final String filesNameExpression) {
+    void setFilesNameExpression(final String filesNameExpression) {
         m_filesNameExpression = filesNameExpression;
     }
 
@@ -343,70 +341,70 @@ class FilterDialogSettings {
     /**
      * @param filesNameCaseSensitive the filesNameCaseSensitive to set
      */
-    public void setFilesNameCaseSensitive(final boolean filesNameCaseSensitive) {
+    void setFilesNameCaseSensitive(final boolean filesNameCaseSensitive) {
         m_filesNameCaseSensitive = filesNameCaseSensitive;
     }
 
     /**
      * @return the filesNameFilterMode
      */
-    public FilterType getFilesNameFilterMode() {
+    FilterType getFilesNameFilterMode() {
         return m_filesNameFilterMode;
     }
 
     /**
      * @param filesNameFilterMode the filesNameFilterMode to set
      */
-    public void setFilesNameFilterMode(final FilterType filesNameFilterMode) {
+    void setFilesNameFilterMode(final FilterType filesNameFilterMode) {
         m_filesNameFilterMode = filesNameFilterMode;
     }
 
     /**
      * @return the filterHiddenFolders
      */
-    public boolean isFilterHiddenFolders() {
+    boolean isFilterHiddenFolders() {
         return m_filterHiddenFolders;
     }
 
     /**
      * @param filterHiddenFolders the filterHiddenFolders to set
      */
-    public void setFilterHiddenFolders(final boolean filterHiddenFolders) {
+    void setFilterHiddenFolders(final boolean filterHiddenFolders) {
         m_filterHiddenFolders = filterHiddenFolders;
     }
 
     /**
      * @return the filterFoldersByExtension
      */
-    public boolean isFilterFoldersByExtension() {
+    boolean isFilterFoldersByExtension() {
         return m_filterFoldersByExtension;
     }
 
     /**
      * @param filterFoldersByExtension the filterFoldersByExtension to set
      */
-    public void setFilterFoldersByExtension(final boolean filterFoldersByExtension) {
+    void setFilterFoldersByExtension(final boolean filterFoldersByExtension) {
         m_filterFoldersByExtension = filterFoldersByExtension;
     }
 
     /**
      * @return the foldersExtensionExpression
      */
-    public String getFoldersExtensionExpression() {
+    String getFoldersExtensionExpression() {
         return m_foldersExtensionExpression;
     }
 
     /**
      * @param foldersExtensionExpression the foldersExtensionExpression to set
      */
-    public void setFoldersExtensionExpression(final String foldersExtensionExpression) {
+    void setFoldersExtensionExpression(final String foldersExtensionExpression) {
         m_foldersExtensionExpression = foldersExtensionExpression;
     }
 
     /**
      * @return the foldersExtensionCaseSensitive
      */
-    public boolean isFoldersExtensionCaseSensitive() {
+    boolean isFoldersExtensionCaseSensitive() {
         return m_foldersExtensionCaseSensitive;
     }
 
@@ -420,65 +418,65 @@ class FilterDialogSettings {
     /**
      * @return the filterFoldersByName
      */
-    public boolean isFilterFoldersByName() {
+    boolean isFilterFoldersByName() {
         return m_filterFoldersByName;
     }
 
     /**
      * @param filterFoldersByName the filterFoldersByName to set
      */
-    public void setFilterFoldersByName(final boolean filterFoldersByName) {
+    void setFilterFoldersByName(final boolean filterFoldersByName) {
         m_filterFoldersByName = filterFoldersByName;
     }
 
     /**
      * @return the foldersNameExpression
      */
-    public String getFoldersNameExpression() {
+    String getFoldersNameExpression() {
         return m_foldersNameExpression;
     }
 
     /**
      * @param foldersNameExpression the foldersNameExpression to set
      */
-    public void setFoldersNameExpression(final String foldersNameExpression) {
+    void setFoldersNameExpression(final String foldersNameExpression) {
         m_foldersNameExpression = foldersNameExpression;
     }
 
     /**
      * @return the foldersNameCaseSensitive
      */
-    public boolean isFoldersNameCaseSensitive() {
+    boolean isFoldersNameCaseSensitive() {
         return m_foldersNameCaseSensitive;
     }
 
     /**
      * @param foldersNameCaseSensitive the foldersNameCaseSensitive to set
      */
-    public void setFoldersNameCaseSensitive(final boolean foldersNameCaseSensitive) {
+    void setFoldersNameCaseSensitive(final boolean foldersNameCaseSensitive) {
         m_foldersNameCaseSensitive = foldersNameCaseSensitive;
     }
 
     /**
      * @return the foldersNameFilterMode
      */
-    public FilterType getFoldersNameFilterMode() {
+    FilterType getFoldersNameFilterMode() {
         return m_foldersNameFilterMode;
     }
 
     /**
      * @param foldersNameFilterMode the foldersNameFilterMode to set
      */
-    public void setFoldersNameFilterMode(final FilterType foldersNameFilterMode) {
+    void setFoldersNameFilterMode(final FilterType foldersNameFilterMode) {
         m_foldersNameFilterMode = foldersNameFilterMode;
     }
 
     /**
      * Saves the the file filter settings to the given {@link Config}.
      *
-     * @param config the configuration to save to.
+     * @param config the configuration to save to
      */
-    public void saveToConfig(final Config config) {
+    void saveToConfig(final Config config) {
         config.addBoolean(CFG_FILES_FILTER_BY_EXTENSION, m_filterFilesByExtension);
         config.addString(CFG_FILES_EXTENSION_EXPRESSION, m_filesExtensionExpression);
         config.addBoolean(CFG_FILES_EXTENSION_CASE_SENSITIVE, m_filesExtensionCaseSensitive);
@@ -499,12 +497,12 @@ class FilterDialogSettings {
     }
 
     /**
-     * Loads the filter configuration from the given {@link Config} into the {@link FilterDialogSettings}.
+     * Loads the filter configuration from the given {@link Config} into the {@link FilterOptionsSettings}.
      *
      * @param config the configuration to load the values from
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException if keys are not available
      */
-    public void loadFromConfigForModel(final Config config) throws InvalidSettingsException {
+    void loadFromConfigForModel(final Config config) throws InvalidSettingsException {
         m_filterFilesByExtension = config.getBoolean(CFG_FILES_FILTER_BY_EXTENSION);
         m_filesExtensionExpression = config.getString(CFG_FILES_EXTENSION_EXPRESSION);
         m_filesExtensionCaseSensitive = config.getBoolean(CFG_FILES_EXTENSION_CASE_SENSITIVE);
@@ -525,11 +523,11 @@ class FilterDialogSettings {
     }
 
     /**
-     * Loads the filter configuration from the given {@link Config} into the {@link FilterDialogSettings}.
+     * Loads the filter configuration from the given {@link Config} into the {@link FilterOptionsSettings}.
      *
      * @param config the configuration to load the values from
      */
-    public void loadFromConfigForDialog(final Config config) {
+    void loadFromConfigForDialog(final Config config) {
         m_filterFilesByExtension = config.getBoolean(CFG_FILES_FILTER_BY_EXTENSION, m_filterFilesByExtension);
         m_filesExtensionExpression = config.getString(CFG_FILES_EXTENSION_EXPRESSION, m_filesExtensionExpression);
         m_filesExtensionCaseSensitive =
@@ -559,7 +557,7 @@ class FilterDialogSettings {
      * @param config the configuration to validate.
      * @throws InvalidSettingsException if keys are not available.
      */
-    public void validate(final Config config) throws InvalidSettingsException {
+    static void validate(final Config config) throws InvalidSettingsException {
         config.getBoolean(CFG_FILES_FILTER_BY_EXTENSION);
         config.getString(CFG_FILES_EXTENSION_EXPRESSION);
         config.getBoolean(CFG_FILES_EXTENSION_CASE_SENSITIVE);

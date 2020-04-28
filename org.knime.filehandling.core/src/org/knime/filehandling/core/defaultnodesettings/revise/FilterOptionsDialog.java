@@ -64,17 +64,18 @@ import javax.swing.WindowConstants;
 import org.knime.core.node.KNIMEConstants;
 
 /**
- * Dialog for file filtering options.
+ * Dialog for file and folder filtering options.
  *
  * @author Björn Lohrmann, KNIME GmbH, Berlin, Germany
+ * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  */
-class FilterDialog extends JDialog {
+final class FilterOptionsDialog extends JDialog {
 
     /** Serial version UID */
     private static final long serialVersionUID = 1L;
 
     /** Panel holding the file filtering components */
-    private final FilterDialogPanel m_filterPanel;
+    private final FilterOptionsPanel m_filterPanel;
 
     /** Title for the dialog */
     private static final String TITLE_STRING = "File filter configuration";
@@ -97,11 +98,12 @@ class FilterDialog extends JDialog {
      * @param owner the owner frame
      * @param panel the file filter panel
      */
-    public FilterDialog(final Frame owner, final FilterDialogPanel panel) {
+    public FilterOptionsDialog(final Frame owner, final FilterOptionsPanel panel) {
         super(owner, TITLE_STRING, true);
         KNIMEConstants.getKNIMEIcon16X16().ifPresent(i -> setIconImage(i.getImage()));
-
         m_filterPanel = panel;
+
+        // filter options panel
         final JPanel rootPanel = new JPanel();
         rootPanel.setLayout(new GridBagLayout());
 
@@ -114,10 +116,9 @@ class FilterDialog extends JDialog {
         gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1;
         gc.weighty = 1;
-
         rootPanel.add(m_filterPanel, gc);
 
-        //buttons
+        // buttons
         gc.anchor = GridBagConstraints.LINE_END;
         gc.fill = GridBagConstraints.NONE;
         gc.weightx = 1;
@@ -163,7 +164,6 @@ class FilterDialog extends JDialog {
     /** Method that defines what happens when hitting the OK button */
     private void onOk() {
         m_resultStatus = JOptionPane.OK_OPTION;
-        // FIXME: We need real saving here
         closeDialog();
     }
 
@@ -182,4 +182,5 @@ class FilterDialog extends JDialog {
     public int getResultStatus() {
         return m_resultStatus;
     }
+
 }

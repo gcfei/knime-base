@@ -60,17 +60,17 @@ import javax.swing.JTextField;
 
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterOption;
-import org.knime.filehandling.core.filefilter.FileFilter.FilterType;
+import org.knime.filehandling.core.defaultnodesettings.revise.FileAndFolderFilter.FilterType;
+import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
 
 /**
- * A panel for the configuration of file and folder filters.
+ * Panel that contains settings for the configuration of file and folder filters.
  *
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  * @author Tobias Urhaug, KNIME GmbH, Berlin, Germany
  * @author Mareike Hoeger, KNIME GmbH, Konstanz, Germany
  */
-class FilterDialogPanel extends JPanel {
+final class FilterOptionsPanel extends JPanel {
 
     /** Serial version UID */
     private static final long serialVersionUID = 1L;
@@ -117,12 +117,16 @@ class FilterDialogPanel extends JPanel {
     /** Check box to enable/disable hidden folders filtering */
     private final JCheckBox m_filterHiddenFolders;
 
+    /** Check box to enable/disable filtering by file extension */
     private final JCheckBox m_filterByFileExtension;
 
+    /** Check box to enable/disable filtering by folder extension */
     private final JCheckBox m_filterByFolderExtension;
 
+    /** Check box to enable/disable filtering by file name */
     private final JCheckBox m_filterByFileName;
 
+    /** Check box to enable/disable filtering by folder name */
     private final JCheckBox m_filterByFolderName;
 
     /** Label for the case sensitive check box */
@@ -158,14 +162,16 @@ class FilterDialogPanel extends JPanel {
     /** Key for filter type model */
     private static final String FOLDER_NAME_FILTER_TYPE_KEY = "folder_name_filter_type";
 
+    /** Panel containing all the file concerning components */
     private final JPanel m_filePanel = new JPanel(new GridBagLayout());
 
+    /** Panel containing all the folder concerning components */
     private final JPanel m_folderPanel = new JPanel(new GridBagLayout());
 
     /**
      * Creates a new File Filter Panel
      */
-    public FilterDialogPanel() {
+    public FilterOptionsPanel() {
         super(new GridBagLayout());
         m_fileNameFilterTypeModel = new SettingsModelString(FILE_NAME_FILTER_TYPE_KEY, FilterType.WILDCARD.name());
         m_fileNameFilterType =
@@ -260,7 +266,7 @@ class FilterDialogPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        // very small number so that file panel will not (noticeably) be moved if both file and folder panels are
+        // very small number so that the file panel will not (noticeably) be moved if both file and folder panels are
         // visible; still > 0 in case folder panel is not visible
         gbc.weighty = 0.0001;
         add(createFileCompsPanel(), gbc);
@@ -323,7 +329,8 @@ class FilterDialogPanel extends JPanel {
         m_filePanel.add(m_filterHiddenFiles, gbc);
         gbc.gridy++;
         gbc.weighty = 1;
-        // dummy label to keep other components at the top
+
+        // Dummy label to keep other components at the top
         m_filePanel.add(new JLabel(), gbc);
         return m_filePanel;
     }
@@ -381,27 +388,28 @@ class FilterDialogPanel extends JPanel {
         m_folderPanel.add(m_filterHiddenFolders, gbc);
         gbc.gridy++;
         gbc.weighty = 1;
-        // dummy label to keep other components at the top
+
+        // Dummy label to keep other components at the top
         m_folderPanel.add(new JLabel(), gbc);
         return m_folderPanel;
     }
 
-    public void visibleComponents(final FilterOption filterOption) {
-        final boolean visibleFileComps = filterOption == FilterOption.FILE
-            || filterOption == FilterOption.FILES_IN_FOLDERS || filterOption == FilterOption.FILES_AND_FOLDERS;
-        final boolean visibleFolderComps = filterOption == FilterOption.FOLDER || filterOption == FilterOption.FOLDERS
-            || filterOption == FilterOption.FILES_AND_FOLDERS;
+    public void visibleComponents(final FilterMode filterOption) {
+        final boolean visibleFileComps = filterOption == FilterMode.FILE
+            || filterOption == FilterMode.FILES_IN_FOLDERS || filterOption == FilterMode.FILES_AND_FOLDERS;
+        final boolean visibleFolderComps = filterOption == FilterMode.FOLDER || filterOption == FilterMode.FOLDERS
+            || filterOption == FilterMode.FILES_AND_FOLDERS;
         m_filePanel.setVisible(visibleFileComps);
         m_folderPanel.setVisible(visibleFolderComps);
     }
 
     /**
-     * Returns the current state of the panel as {@link FilterDialogSettings}.
+     * Returns the current state of the panel as {@link FilterOptionsSettings}.
      *
-     * @return the current state of the panel as {@link FilterDialogSettings}
+     * @return the current state of the panel as {@link FilterOptionsSettings}
      */
-    public FilterDialogSettings getFilterConfigSettings() {
-        final FilterDialogSettings fileFilterSettings = new FilterDialogSettings();
+    FilterOptionsSettings getFilterConfigSettings() {
+        final FilterOptionsSettings fileFilterSettings = new FilterOptionsSettings();
 
         fileFilterSettings.setFilterFilesByExtension(m_filterByFileExtension.isSelected());
         fileFilterSettings.setFilesExtensionExpression(m_filterFileExtensionTextField.getText());
@@ -425,11 +433,11 @@ class FilterDialogPanel extends JPanel {
     }
 
     /**
-     * Sets the state of the panel based on the given {@link FilterDialogSettings}.
+     * Sets the state of the panel based on the given {@link FilterOptionsSettings}.
      *
-     * @param fileFilterSettings the {@link FilterDialogSettings} to apply
+     * @param fileFilterSettings the {@link FilterOptionsSettings} to apply
      */
-    public void setFilterConfigSettings(final FilterDialogSettings fileFilterSettings) {
+    void setFilterConfigSettings(final FilterOptionsSettings fileFilterSettings) {
         m_filterByFileExtension.setSelected(fileFilterSettings.isFilterFilesByExtension());
         m_filterFileExtensionTextField.setText(fileFilterSettings.getFilesExtensionExpression());
         m_caseSensitiveFileExtension.setSelected(fileFilterSettings.isFilesExtensionCaseSensitive());

@@ -48,6 +48,7 @@ package org.knime.filehandling.core.node.portobject;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +71,10 @@ import org.knime.filehandling.core.defaultnodesettings.DialogComponentFileChoose
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
 import org.knime.filehandling.core.defaultnodesettings.FilesHistoryPanel;
 import org.knime.filehandling.core.defaultnodesettings.SettingsModelFileChooser2;
+import org.knime.filehandling.core.defaultnodesettings.revise.FileAndFolderFilter;
 import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent;
+import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
+import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeSettingsModel;
 import org.knime.filehandling.core.node.portobject.reader.PortObjectReaderNodeDialog;
 import org.knime.filehandling.core.node.portobject.writer.PortObjectWriterNodeDialog;
 
@@ -111,7 +115,8 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         final String fileChooserHistoryId, final int fileChooserDialogType, final int fileChooserSelectionMode) {
         m_config = config;
 
-        m_filterOptionPanel = new FilterModeDialogComponent(m_config.getS());
+        m_filterOptionPanel = new FilterModeDialogComponent(m_config.getS(),
+            new FilterMode[]{FilterMode.FOLDER, FilterMode.FILES_AND_FOLDERS, FilterMode.FILE});
         final SettingsModelFileChooser2 fileChooserModel = m_config.getFileChooserModel();
         final FlowVariableModel fvm = createFlowVariableModel(
             new String[]{fileChooserModel.getConfigName(), SettingsModelFileChooser2.PATH_OR_URL_KEY}, Type.STRING);
@@ -194,10 +199,13 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         gbc.weighty = 1;
         panel.add(m_filterOptionPanel.getSelectionModePanel(), gbc);
         gbc.gridy++;
+        panel.add(m_filePanel.getComponentPanel(), gbc);
+        gbc.gridy++;
+        gbc.anchor = GridBagConstraints.CENTER;
+        //        gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 0;
         panel.add(m_filterOptionPanel.getFilterConfigPanel(), gbc);
         m_filterOptionPanel.getModel().addChangeListener(l -> System.out.println("triggered"));
-        gbc.gridy++;
-        panel.add(m_filePanel.getComponentPanel(), gbc);
         return panel;
     }
 
@@ -241,6 +249,16 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         m_filePanel.saveSettingsTo(settings);
         m_timeoutSpinner.saveSettingsTo(settings);
         m_filterOptionPanel.saveSettingsTo(settings);
+
+        FileAndFolderFilter filter = new FileAndFolderFilter(
+            ((FilterModeSettingsModel)m_filterOptionPanel.getModel()).getFilterOptionsSettings());
+
+        boolean test = filter.test(new File("/home/simon/Dropbox/Dateien/ofm/2. Umbruch/.asd").toPath());
+        System.out.println(test);
+
+        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_IN_FOLDERS, false));
+//        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FOLDER, false));
+//        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_AND_FOLDERS, false));
     }
 
     @Override
