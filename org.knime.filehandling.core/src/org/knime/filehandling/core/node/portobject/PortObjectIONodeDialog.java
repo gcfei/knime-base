@@ -71,10 +71,10 @@ import org.knime.filehandling.core.defaultnodesettings.DialogComponentFileChoose
 import org.knime.filehandling.core.defaultnodesettings.FileSystemChoice;
 import org.knime.filehandling.core.defaultnodesettings.FilesHistoryPanel;
 import org.knime.filehandling.core.defaultnodesettings.SettingsModelFileChooser2;
+import org.knime.filehandling.core.defaultnodesettings.revise.DialogComponentFilterMode;
+import org.knime.filehandling.core.defaultnodesettings.revise.DialogComponentFilterMode.FilterMode;
 import org.knime.filehandling.core.defaultnodesettings.revise.FileAndFolderFilter;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeSettingsModel;
+import org.knime.filehandling.core.defaultnodesettings.revise.SettingsModelFilterMode;
 import org.knime.filehandling.core.node.portobject.reader.PortObjectReaderNodeDialog;
 import org.knime.filehandling.core.node.portobject.writer.PortObjectWriterNodeDialog;
 
@@ -93,7 +93,7 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
 
     private final List<JPanel> m_additionalPanels = new ArrayList<>();
 
-    private final FilterModeDialogComponent m_filterOptionPanel;
+    private final DialogComponentFilterMode m_filterOptionPanel;
 
     private final DialogComponentFileChooser2 m_filePanel;
 
@@ -115,8 +115,7 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         final String fileChooserHistoryId, final int fileChooserDialogType, final int fileChooserSelectionMode) {
         m_config = config;
 
-        m_filterOptionPanel = new FilterModeDialogComponent(m_config.getS(),
-            new FilterMode[]{FilterMode.FOLDER, FilterMode.FILES_AND_FOLDERS, FilterMode.FILE});
+        m_filterOptionPanel = new DialogComponentFilterMode(m_config.getS(), false, FilterMode.values());
         final SettingsModelFileChooser2 fileChooserModel = m_config.getFileChooserModel();
         final FlowVariableModel fvm = createFlowVariableModel(
             new String[]{fileChooserModel.getConfigName(), SettingsModelFileChooser2.PATH_OR_URL_KEY}, Type.STRING);
@@ -197,7 +196,8 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(0, 5, 0, 5);
         gbc.weighty = 1;
-        panel.add(m_filterOptionPanel.getSelectionModePanel(), gbc);
+        panel.add(m_filterOptionPanel.getComponentPanel(), gbc);
+        //        panel.add(m_filterOptionPanel.getSelectionModePanel(), gbc);
         gbc.gridy++;
         panel.add(m_filePanel.getComponentPanel(), gbc);
         gbc.gridy++;
@@ -246,19 +246,21 @@ public abstract class PortObjectIONodeDialog<C extends PortObjectIONodeConfig> e
         // save dialog settings
         m_config.saveConfigurationForDialog(settings);
         // save file panel and timeout settings
+        m_filePanel.getModel().setEnabled(false);
         m_filePanel.saveSettingsTo(settings);
+        m_timeoutSpinner.getModel().setEnabled(false);
         m_timeoutSpinner.saveSettingsTo(settings);
+//        m_filterOptionPanel.getModel().setEnabled(!m_filterOptionPanel.getModel().isEnabled());
         m_filterOptionPanel.saveSettingsTo(settings);
 
         FileAndFolderFilter filter = new FileAndFolderFilter(
-            ((FilterModeSettingsModel)m_filterOptionPanel.getModel()).getFilterOptionsSettings());
-
-        boolean test = filter.test(new File("/home/simon/Dropbox/Dateien/ofm/2. Umbruch/.asd").toPath());
+            ((SettingsModelFilterMode)m_filterOptionPanel.getModel()).getFilterOptionsSettings());
+        boolean test = filter.test(new File("/home/simon/Desktop/tmp/test_adult_unbalanced.csv").toPath());
         System.out.println(test);
 
-        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_IN_FOLDERS, false));
-//        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FOLDER, false));
-//        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_AND_FOLDERS, false));
+        //        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_IN_FOLDERS, false));
+        //        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FOLDER, false));
+        //        System.out.println(m_filterOptionPanel.setEnabledFilterModeButton(FilterMode.FILES_AND_FOLDERS, false));
     }
 
     @Override

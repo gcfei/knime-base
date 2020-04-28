@@ -54,13 +54,14 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
+import org.knime.filehandling.core.defaultnodesettings.revise.DialogComponentFilterMode.FilterMode;
 
 /**
+ * Settings model for {@link DialogComponentFilterMode}.
  *
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  */
-public final class FilterModeSettingsModel extends SettingsModel {
+public final class SettingsModelFilterMode extends SettingsModel {
 
     private static final String MODEL_TYPE_ID = "SMID_FilterMode";
 
@@ -86,12 +87,12 @@ public final class FilterModeSettingsModel extends SettingsModel {
      * @param configName the config name
      * @param defaultFilterMode the default {@link FilterMode}
      */
-    public FilterModeSettingsModel(final String configName, final FilterMode defaultFilterMode) {
+    public SettingsModelFilterMode(final String configName, final FilterMode defaultFilterMode) {
         m_configName = configName;
         m_filterMode = defaultFilterMode;
     }
 
-    private FilterModeSettingsModel(final FilterModeSettingsModel toCopy) {
+    private SettingsModelFilterMode(final SettingsModelFilterMode toCopy) {
         m_configName = toCopy.m_configName;
         m_filterMode = toCopy.m_filterMode;
         m_includeSubfolders = toCopy.m_includeSubfolders;
@@ -109,8 +110,11 @@ public final class FilterModeSettingsModel extends SettingsModel {
      * @param filterMode the filterMode to set
      */
     public void setFilterMode(final FilterMode filterMode) {
+        boolean notify = m_filterMode != filterMode;
         m_filterMode = filterMode;
-        notifyChangeListeners();
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -123,9 +127,12 @@ public final class FilterModeSettingsModel extends SettingsModel {
     /**
      * @param filterOptionsSettings the filterOptionsSettings to set
      */
-    public void setFilterConfigSettings(final FilterOptionsSettings filterOptionsSettings) {
+    public void setFilterOptionsSettings(final FilterOptionsSettings filterOptionsSettings) {
+        boolean notify = m_filterOptionsSettings != filterOptionsSettings;
         m_filterOptionsSettings = filterOptionsSettings;
-        notifyChangeListeners();
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -139,14 +146,17 @@ public final class FilterModeSettingsModel extends SettingsModel {
      * @param includeSubfolders the includeSubfolders to set
      */
     public void setIncludeSubfolders(final boolean includeSubfolders) {
+        boolean notify = m_includeSubfolders != includeSubfolders;
         m_includeSubfolders = includeSubfolders;
-        notifyChangeListeners();
+        if (notify) {
+            notifyChangeListeners();
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    protected FilterModeSettingsModel createClone() {
-        return new FilterModeSettingsModel(this);
+    protected SettingsModelFilterMode createClone() {
+        return new SettingsModelFilterMode(this);
     }
 
     @Override

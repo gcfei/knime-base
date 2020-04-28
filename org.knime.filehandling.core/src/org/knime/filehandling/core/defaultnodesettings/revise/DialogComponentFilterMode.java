@@ -71,13 +71,13 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
- *
+ * TODO
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  */
-public final class FilterModeDialogComponent extends DialogComponent {
+public final class DialogComponentFilterMode extends DialogComponent {
 
     /** Panel containing filtering options */
-    private final FilterOptionsPanel m_filterDialogPanel = new FilterOptionsPanel();
+    private final FilterOptionsPanel m_filterOptionsPanel = new FilterOptionsPanel();
 
     /** Button to open the dialog that contains options for file filtering */
     private final JButton m_filterOptionsButton = new JButton("Filter options");
@@ -90,18 +90,23 @@ public final class FilterModeDialogComponent extends DialogComponent {
 
     private final JPanel m_filterModePanel;
 
-    private final JPanel m_filterPanel;
+    private final JPanel m_filterConfigPanel;
 
     private final FilterMode[] m_filterModes;
 
     /**
+     * Constructor. If {@code showFilterOptionsPanel} is disabled, the panel can still be retrieved by calling
+     * {@link #getFilterConfigPanel()}.
+     *
      * @param model the settings model
+     * @param showFilterOptionsPanel if the panel that allows setting filter options is shown or not
      * @param filterModes filter modes that will be available and be arranged according the order (first one is
      *            leftmost)
      *
      * @throws IllegalArgumentException if the list of filter modes contains duplicates
      */
-    public FilterModeDialogComponent(final FilterModeSettingsModel model, final FilterMode... filterModes) {
+    public DialogComponentFilterMode(final SettingsModelFilterMode model, final boolean showFilterOptionsPanel,
+        final FilterMode... filterModes) {
         super(model);
         m_filterModes = filterModes;
         // does not need a meaningful config name since it will never be saved
@@ -110,27 +115,31 @@ public final class FilterModeDialogComponent extends DialogComponent {
         m_filterOptionsButton.addActionListener(e -> showFileFilterConfigurationDialog());
 
         m_filterModePanel = createFilterModePanel();
-        m_filterPanel = createFilterPanel();
+        m_filterConfigPanel = createFilterPanel();
 
         m_filterModeSettingsModel.addChangeListener(l -> {
             final FilterMode filterMode = FilterMode.valueOf(m_filterModeSettingsModel.getStringValue());
-            m_filterDialogPanel.visibleComponents(filterMode);
             model.setFilterMode(filterMode);
+            setFilterModeBasedVisibility(filterMode);
         });
         m_includeSubfoldersCheckBox
             .addActionListener(l -> model.setIncludeSubfolders(m_includeSubfoldersCheckBox.isSelected()));
 
-        initComponent();
+        initComponent(showFilterOptionsPanel);
+        getModel().addChangeListener(e -> updateComponent());
     }
 
-    private void initComponent() {
+    private void initComponent(final boolean showFilterOptionsPanel) {
         getComponentPanel().setLayout(new GridBagLayout());
         final GridBagConstraints gbc = createAndInitGBC();
         gbc.weightx = 1;
+        gbc.weighty = showFilterOptionsPanel ? 0 : 1;
         getComponentPanel().add(m_filterModePanel, gbc);
-        gbc.gridy++;
-        gbc.weighty = 1;
-        getComponentPanel().add(m_filterPanel, gbc);
+        if (showFilterOptionsPanel) {
+            gbc.gridy++;
+            gbc.weighty = 1;
+            getComponentPanel().add(m_filterConfigPanel, gbc);
+        }
     }
 
     private JPanel createFilterModePanel() {
@@ -201,20 +210,20 @@ public final class FilterModeDialogComponent extends DialogComponent {
      * Returns if the specified filter mode button is enabled.
      *
      * @param filterMode the filter mode of the button to check
-     * @return <code>true</code> if the button is enabled, otherwise <code>false</code>
+     * @return {@code true} if the button is enabled, otherwise {@code false}
      */
     public boolean isFilterModeEnabled(final FilterMode filterMode) {
         return m_filterModeButtonGroup.getButton(filterMode.name()).isEnabled();
     }
 
-    /**
-     * Returns the panel that contains the button group for selecting the filter mode.
-     *
-     * @return the panel containing filter mode button group
-     */
-    public JPanel getSelectionModePanel() {
-        return m_filterModePanel;
-    }
+    //    /**
+    //     * Returns the panel that contains the button group for selecting the filter mode.
+    //     *
+    //     * @return the panel containing filter mode button group
+    //     */
+    //    public JPanel getSelectionModePanel() {
+    //        return m_filterModePanel;
+    //    }
 
     /**
      * Returns the panel that contains the the button to open the dialog with filter options and the check box that
@@ -223,15 +232,15 @@ public final class FilterModeDialogComponent extends DialogComponent {
      * @return the panel containing filter options button and include subfolders check box
      */
     public JPanel getFilterConfigPanel() {
-        return m_filterPanel;
+        return m_filterConfigPanel;
     }
 
     /** Method called if filter options button is clicked */
     private void showFileFilterConfigurationDialog() {
-
+        // TODO show button only for certain modes
         final Container c = getComponentPanel().getParent();
         Frame parentFrame = null;
-        Container parent = getComponentPanel();
+        Container parent = c;
         while (parent != null) {
             if (parent instanceof Frame) {
                 parentFrame = (Frame)parent;
@@ -239,19 +248,18 @@ public final class FilterModeDialogComponent extends DialogComponent {
             }
             parent = parent.getParent();
         }
-
-        final FilterOptionsDialog filterDialog = new FilterOptionsDialog(parentFrame, m_filterDialogPanel);
-        filterDialog.setLocationRelativeTo(c); // TODO
+        final FilterOptionsDialog filterDialog = new FilterOptionsDialog(parentFrame, m_filterOptionsPanel);
+        filterDialog.setLocationRelativeTo(c);
         filterDialog.setVisible(true);
 
         if (filterDialog.getResultStatus() == JOptionPane.OK_OPTION) {
             // update the settings model
-            ((FilterModeSettingsModel)getModel())
-                .setFilterConfigSettings(m_filterDialogPanel.getFilterConfigSettings());
+            ((SettingsModelFilterMode)getModel())
+                .setFilterOptionsSettings(m_filterOptionsPanel.getFilterConfigSettings());
         } else {
             // overwrite the values in the filter options panel with the saved ones
-            m_filterDialogPanel
-                .setFilterConfigSettings(((FilterModeSettingsModel)getModel()).getFilterOptionsSettings());
+            m_filterOptionsPanel
+                .setFilterConfigSettings(((SettingsModelFilterMode)getModel()).getFilterOptionsSettings());
         }
     }
 
@@ -301,12 +309,18 @@ public final class FilterModeDialogComponent extends DialogComponent {
 
     @Override
     protected void updateComponent() {
-        final FilterModeSettingsModel model = (FilterModeSettingsModel)getModel();
+        final SettingsModelFilterMode model = (SettingsModelFilterMode)getModel();
         m_filterModeSettingsModel.setStringValue(model.getFilterMode().name());
         m_includeSubfoldersCheckBox.setSelected(model.isIncludeSubfolders());
-        m_filterDialogPanel.setFilterConfigSettings(model.getFilterOptionsSettings());
-        m_filterDialogPanel.visibleComponents(FilterMode.valueOf(m_filterModeSettingsModel.getStringValue()));
+        m_filterOptionsPanel.setFilterConfigSettings(model.getFilterOptionsSettings());
+        setFilterModeBasedVisibility(model.getFilterMode());
         setEnabledComponents(model.isEnabled());
+    }
+
+    private void setFilterModeBasedVisibility(final FilterMode filterMode) {
+        m_filterOptionsPanel.visibleComponents(filterMode);
+        m_filterConfigPanel.setVisible(filterMode == FilterMode.FILES_IN_FOLDERS
+            || filterMode == FilterMode.FILES_AND_FOLDERS || filterMode == FilterMode.FOLDERS);
     }
 
     @Override
@@ -321,7 +335,6 @@ public final class FilterModeDialogComponent extends DialogComponent {
 
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        m_filterModePanel.setEnabled(enabled); // TODO does panel disable its components?
         m_filterModeButtonGroup.getModel().setEnabled(enabled);
         m_filterOptionsButton.setEnabled(enabled);
         m_includeSubfoldersCheckBox.setEnabled(enabled);

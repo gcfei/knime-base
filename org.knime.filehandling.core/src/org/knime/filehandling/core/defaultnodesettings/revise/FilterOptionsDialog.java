@@ -78,7 +78,7 @@ final class FilterOptionsDialog extends JDialog {
     private final FilterOptionsPanel m_filterPanel;
 
     /** Title for the dialog */
-    private static final String TITLE_STRING = "File filter configuration";
+    private static final String TITLE_STRING = "Filter options";
 
     /** Ok button label */
     private static final String OK_BUTTON_LABEL = "OK";
@@ -93,10 +93,10 @@ final class FilterOptionsDialog extends JDialog {
     private int m_resultStatus = -1;
 
     /**
-     * Creates a new instance of {@code FileFilterDialog}.
+     * Constructor.
      *
      * @param owner the owner frame
-     * @param panel the file filter panel
+     * @param panel the filter options panel that is shown in the dialog
      */
     public FilterOptionsDialog(final Frame owner, final FilterOptionsPanel panel) {
         super(owner, TITLE_STRING, true);

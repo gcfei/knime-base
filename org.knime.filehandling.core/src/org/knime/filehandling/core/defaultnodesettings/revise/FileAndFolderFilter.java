@@ -60,17 +60,20 @@ import java.util.stream.Collectors;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
- * File Filter.
+ * File and folder filter based on {@link FilterOptionsSettings}.
  *
+ * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  * @author Tobias Urhaug, KNIME GmbH, Berlin, Germany
  * @author Mareike Hoeger, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("javadoc")
 public final class FileAndFolderFilter implements Predicate<Path> {
 
     /**
      * FilterType enumeration used for {@link FileAndFolderFilter}.
      *
      * @author Julian Bunzel, KNIME GmbH, Berlin, Germany
+     * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
      */
     enum FilterType implements ButtonGroupEnumInterface {
 
@@ -149,14 +152,13 @@ public final class FileAndFolderFilter implements Predicate<Path> {
      *
      * @param filterOptionSettings settings model containing necessary parameters
      */
-    @SuppressWarnings("javadoc")
     public FileAndFolderFilter(final FilterOptionsSettings filterOptionSettings) {
         m_fileFilterSettings = filterOptionSettings;
     }
 
     private final boolean isSatisfiedFilterHidden(final Path path) {
         try {
-            return !(m_fileFilterSettings.isFilterHiddenFiles() && Files.isHidden(path));
+            return !Files.isHidden(path) || m_fileFilterSettings.isIncludeHiddenFiles();
         } catch (final IOException ex) {
             return true;
         }
@@ -164,7 +166,7 @@ public final class FileAndFolderFilter implements Predicate<Path> {
 
     private final boolean isSatisfiedFolderHidden(final Path path) {
         try {
-            return !(m_fileFilterSettings.isFilterHiddenFolders() && Files.isHidden(path));
+            return !Files.isHidden(path) || m_fileFilterSettings.isIncludeHiddenFolders();
         } catch (final IOException ex) {
             return true;
         }
@@ -180,18 +182,6 @@ public final class FileAndFolderFilter implements Predicate<Path> {
             m_numberOfFilteredFiles++;
         }
 
-        return accept;
-    }
-
-    private final boolean isSatisfiedFolderExtension(final Path path) {
-        if (!m_fileFilterSettings.isFilterFoldersByExtension()) {
-            return true;
-        }
-        final boolean accept = isSatisfiedExtension(path, m_fileFilterSettings.getFoldersExtensionExpression(),
-            m_fileFilterSettings.isFoldersExtensionCaseSensitive());
-        if (!accept) {
-            m_numberOfFilteredFolders++;
-        }
         return accept;
     }
 
@@ -333,7 +323,6 @@ public final class FileAndFolderFilter implements Predicate<Path> {
     public boolean test(final Path path) {
         if (Files.isDirectory(path)) {
             return isSatisfiedFolderHidden(path) && //
-                isSatisfiedFolderExtension(path) && //
                 isSatisfiedFolderName(path);
         }
         return Files.isRegularFile(path) && //

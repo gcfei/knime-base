@@ -60,11 +60,11 @@ import javax.swing.JTextField;
 
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.filehandling.core.defaultnodesettings.revise.DialogComponentFilterMode.FilterMode;
 import org.knime.filehandling.core.defaultnodesettings.revise.FileAndFolderFilter.FilterType;
-import org.knime.filehandling.core.defaultnodesettings.revise.FilterModeDialogComponent.FilterMode;
 
 /**
- * Panel that contains settings for the configuration of file and folder filters.
+ * Panel that contains options used by the {@link FileAndFolderFilter}.
  *
  * @author Simon Schmid, KNIME GmbH, Konstanz, Germany
  * @author Tobias Urhaug, KNIME GmbH, Berlin, Germany
@@ -90,9 +90,6 @@ final class FilterOptionsPanel extends JPanel {
     /** Text field to define the file suffixes */
     private final JTextField m_filterFileExtensionTextField;
 
-    /** Text field to define the folder suffixes */
-    private final JTextField m_filterFolderExtensionTextField;
-
     /** Text field to define the file name wildcard or regular expression */
     private final JTextField m_filterFileNameTextField;
 
@@ -102,26 +99,20 @@ final class FilterOptionsPanel extends JPanel {
     /** Check box to enable/disable case sensitive file extension filtering */
     private final JCheckBox m_caseSensitiveFileExtension;
 
-    /** Check box to enable/disable case sensitive folder extension filtering */
-    private final JCheckBox m_caseSensitiveFolderExtension;
-
     /** Check box to enable/disable case sensitive file name filtering */
     private final JCheckBox m_caseSensitiveFileName;
 
     /** Check box to enable/disable case sensitive folder name filtering */
     private final JCheckBox m_caseSensitiveFolderName;
 
-    /** Check box to enable/disable hidden files filtering */
-    private final JCheckBox m_filterHiddenFiles;
+    /** Check box to enable/disable hidden files inclusion */
+    private final JCheckBox m_includeHiddenFiles;
 
-    /** Check box to enable/disable hidden folders filtering */
-    private final JCheckBox m_filterHiddenFolders;
+    /** Check box to enable/disable hidden folders inclusion */
+    private final JCheckBox m_includeHiddenFolders;
 
     /** Check box to enable/disable filtering by file extension */
     private final JCheckBox m_filterByFileExtension;
-
-    /** Check box to enable/disable filtering by folder extension */
-    private final JCheckBox m_filterByFolderExtension;
 
     /** Check box to enable/disable filtering by file name */
     private final JCheckBox m_filterByFileName;
@@ -129,20 +120,20 @@ final class FilterOptionsPanel extends JPanel {
     /** Check box to enable/disable filtering by folder name */
     private final JCheckBox m_filterByFolderName;
 
+    /** Label for file filter panel */
+    private static final String FILE_FILTER_PANEL_LABEL = "File filter options";
+
+    /** Label for folder filter panel */
+    private static final String FOLDER_FILTER_PANEL_LABEL = "Folder filter options";
+
     /** Label for the case sensitive check box */
     private static final String CASE_SENSITIVE_LABEL = "Case sensitive";
 
     /** Label for the file extension filter */
     private static final String FILTER_FILE_EXTENSIONS_LABEL = "File extension(s)";
 
-    /** Label for the folder extension filter */
-    private static final String FILTER_FOLDER_EXTENSIONS_LABEL = "Folder extension(s)";
-
     /** Tooltip for the file extension filter */
     private static final String FILTER_FILE_EXTENSIONS_TOOLTIP = "Enter file extensions separated by ;";
-
-    /** Tooltip for the folder extension filter */
-    private static final String FILTER_FOLDER_EXTENSIONS_TOOLTIP = "Enter folder extensions separated by ;";
 
     /** Label for the file name filter */
     private static final String FILTER_FILE_NAME_LABEL = "File name";
@@ -150,11 +141,11 @@ final class FilterOptionsPanel extends JPanel {
     /** Label for the folder name filter */
     private static final String FILTER_FOLDER_NAME_LABEL = "Folder name";
 
-    /** String used as label for the filter hidden files check box */
-    private static final String FILTER_HIDDEN_FILES_LABEL = "Filter hidden files";
+    /** String used as label for the include  hidden files check box */
+    private static final String INCLUDE_HIDDEN_FILES_LABEL = "Include hidden files";
 
-    /** String used as label for the filter hidden folders check box */
-    private static final String FILTER_HIDDEN_FOLDERS_LABEL = "Filter hidden folders";
+    /** String used as label for the include hidden folders check box */
+    private static final String INCLUDE_HIDDEN_FOLDERS_LABEL = "Include hidden folders";
 
     /** Key for filter type model */
     private static final String FILE_NAME_FILTER_TYPE_KEY = "file_name_filter_type";
@@ -196,24 +187,18 @@ final class FilterOptionsPanel extends JPanel {
 
         m_filterFileExtensionTextField = new JTextField();
         m_filterFileExtensionTextField.setToolTipText(FILTER_FILE_EXTENSIONS_TOOLTIP);
-        m_filterFolderExtensionTextField = new JTextField();
-        m_filterFolderExtensionTextField.setToolTipText(FILTER_FOLDER_EXTENSIONS_TOOLTIP);
 
         m_caseSensitiveFileExtension = new JCheckBox(CASE_SENSITIVE_LABEL);
-        m_caseSensitiveFolderExtension = new JCheckBox(CASE_SENSITIVE_LABEL);
 
         m_filterByFileExtension = new JCheckBox(FILTER_FILE_EXTENSIONS_LABEL);
         m_filterByFileExtension.addChangeListener(e -> handleFilterFileExtensionCheckBoxUpdate());
-        m_filterByFolderExtension = new JCheckBox(FILTER_FOLDER_EXTENSIONS_LABEL);
-        m_filterByFolderExtension.addChangeListener(e -> handleFilterFolderExtensionCheckBoxUpdate());
 
-        m_filterHiddenFiles = new JCheckBox(FILTER_HIDDEN_FILES_LABEL);
-        m_filterHiddenFiles.setSelected(true);
-        m_filterHiddenFolders = new JCheckBox(FILTER_HIDDEN_FOLDERS_LABEL);
-        m_filterHiddenFolders.setSelected(true);
+        m_includeHiddenFiles = new JCheckBox(INCLUDE_HIDDEN_FILES_LABEL);
+        m_includeHiddenFiles.setSelected(true);
+        m_includeHiddenFolders = new JCheckBox(INCLUDE_HIDDEN_FOLDERS_LABEL);
+        m_includeHiddenFolders.setSelected(true);
 
         handleFilterFileExtensionCheckBoxUpdate();
-        handleFilterFolderExtensionCheckBoxUpdate();
         handleFilterFileNameCheckBoxUpdate();
         handleFilterFolderNameCheckBoxUpdate();
         handleFileNameFilterTypeUpdate();
@@ -240,12 +225,6 @@ final class FilterOptionsPanel extends JPanel {
         final boolean filterExtension = m_filterByFileExtension.isSelected();
         m_filterFileExtensionTextField.setEnabled(filterExtension);
         m_caseSensitiveFileExtension.setEnabled(filterExtension);
-    }
-
-    private void handleFilterFolderExtensionCheckBoxUpdate() {
-        final boolean filterExtension = m_filterByFolderExtension.isSelected();
-        m_filterFolderExtensionTextField.setEnabled(filterExtension);
-        m_caseSensitiveFolderExtension.setEnabled(filterExtension);
     }
 
     private void handleFileNameFilterTypeUpdate() {
@@ -277,8 +256,8 @@ final class FilterOptionsPanel extends JPanel {
     }
 
     private JPanel createFileCompsPanel() {
-        m_filePanel.setBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "File filter configuration"));
+        m_filePanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), FILE_FILTER_PANEL_LABEL));
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE;
@@ -326,7 +305,7 @@ final class FilterOptionsPanel extends JPanel {
         gbc.insets = new Insets(10, 5, 0, 0);
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        m_filePanel.add(m_filterHiddenFiles, gbc);
+        m_filePanel.add(m_includeHiddenFiles, gbc);
         gbc.gridy++;
         gbc.weighty = 1;
 
@@ -336,29 +315,11 @@ final class FilterOptionsPanel extends JPanel {
     }
 
     private JPanel createFolderCompsPanel() {
-        m_folderPanel.setBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Folder filter configuration"));
+        m_folderPanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), FOLDER_FILTER_PANEL_LABEL));
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE;
-
-        // Folder extension filter settings
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.insets = new Insets(5, 5, 0, 0);
-        m_folderPanel.add(m_filterByFolderExtension, gbc);
-        gbc.gridx++;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-        gbc.insets = new Insets(5, 5, 0, 5);
-        m_folderPanel.add(m_filterFolderExtensionTextField, gbc);
-
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.insets = new Insets(4, 25, 0, 0);
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        m_folderPanel.add(m_caseSensitiveFolderExtension, gbc);
 
         // Folder name filter settings
         gbc.gridy++;
@@ -385,7 +346,7 @@ final class FilterOptionsPanel extends JPanel {
         gbc.insets = new Insets(10, 5, 0, 0);
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        m_folderPanel.add(m_filterHiddenFolders, gbc);
+        m_folderPanel.add(m_includeHiddenFolders, gbc);
         gbc.gridy++;
         gbc.weighty = 1;
 
@@ -395,8 +356,8 @@ final class FilterOptionsPanel extends JPanel {
     }
 
     public void visibleComponents(final FilterMode filterOption) {
-        final boolean visibleFileComps = filterOption == FilterMode.FILE
-            || filterOption == FilterMode.FILES_IN_FOLDERS || filterOption == FilterMode.FILES_AND_FOLDERS;
+        final boolean visibleFileComps = filterOption == FilterMode.FILE || filterOption == FilterMode.FILES_IN_FOLDERS
+            || filterOption == FilterMode.FILES_AND_FOLDERS;
         final boolean visibleFolderComps = filterOption == FilterMode.FOLDER || filterOption == FilterMode.FOLDERS
             || filterOption == FilterMode.FILES_AND_FOLDERS;
         m_filePanel.setVisible(visibleFileComps);
@@ -418,16 +379,13 @@ final class FilterOptionsPanel extends JPanel {
         fileFilterSettings.setFilesNameExpression(m_filterFileNameTextField.getText());
         fileFilterSettings.setFilesNameFilterMode(FilterType.valueOf(m_fileNameFilterTypeModel.getStringValue()));
         fileFilterSettings.setFilesNameCaseSensitive(m_caseSensitiveFileName.isSelected());
-        fileFilterSettings.setFilterHiddenFiles(m_filterHiddenFiles.isSelected());
+        fileFilterSettings.setIncludeHiddenFiles(m_includeHiddenFiles.isSelected());
 
-        fileFilterSettings.setFilterFoldersByExtension(m_filterByFolderExtension.isSelected());
-        fileFilterSettings.setFoldersExtensionExpression(m_filterFolderExtensionTextField.getText());
-        fileFilterSettings.setFoldersExtensionCaseSensitive(m_caseSensitiveFolderExtension.isSelected());
         fileFilterSettings.setFilterFoldersByName(m_filterByFolderName.isSelected());
         fileFilterSettings.setFoldersNameExpression(m_filterFolderNameTextField.getText());
         fileFilterSettings.setFoldersNameFilterMode(FilterType.valueOf(m_folderNameFilterTypeModel.getStringValue()));
         fileFilterSettings.setFoldersNameCaseSensitive(m_caseSensitiveFolderName.isSelected());
-        fileFilterSettings.setFilterHiddenFolders(m_filterHiddenFolders.isSelected());
+        fileFilterSettings.setIncludeHiddenFolders(m_includeHiddenFolders.isSelected());
 
         return fileFilterSettings;
     }
@@ -445,15 +403,12 @@ final class FilterOptionsPanel extends JPanel {
         m_filterFileNameTextField.setText(fileFilterSettings.getFilesNameExpression());
         m_fileNameFilterTypeModel.setStringValue(fileFilterSettings.getFilesNameFilterMode().toString());
         m_caseSensitiveFileName.setSelected(fileFilterSettings.isFilesNameCaseSensitive());
-        m_filterHiddenFiles.setSelected(fileFilterSettings.isFilterHiddenFiles());
+        m_includeHiddenFiles.setSelected(fileFilterSettings.isIncludeHiddenFiles());
 
-        m_filterByFolderExtension.setSelected(fileFilterSettings.isFilterFoldersByExtension());
-        m_filterFolderExtensionTextField.setText(fileFilterSettings.getFoldersExtensionExpression());
-        m_caseSensitiveFolderExtension.setSelected(fileFilterSettings.isFoldersExtensionCaseSensitive());
         m_filterByFolderName.setSelected(fileFilterSettings.isFilterFoldersByName());
         m_filterFolderNameTextField.setText(fileFilterSettings.getFoldersNameExpression());
         m_folderNameFilterTypeModel.setStringValue(fileFilterSettings.getFoldersNameFilterMode().toString());
         m_caseSensitiveFolderName.setSelected(fileFilterSettings.isFoldersNameCaseSensitive());
-        m_filterHiddenFolders.setSelected(fileFilterSettings.isFilterHiddenFolders());
+        m_includeHiddenFolders.setSelected(fileFilterSettings.isIncludeHiddenFolders());
     }
 }
